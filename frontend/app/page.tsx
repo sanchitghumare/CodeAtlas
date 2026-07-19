@@ -2,23 +2,72 @@
 
 import { useState } from "react";
 
+type ReviewIssue = {
+  severity: string;
+  category: string;
+  description: string;
+  suggestion: string;
+};
+
+type FileReview = {
+  path: string;
+  score: number;
+  strengths: string[];
+  issues: ReviewIssue[];
+};
+
+type ReviewResponse = {
+  summary: {
+    project_type: string;
+    purpose: string;
+    architecture: string;
+    technologies: string[];
+    frameworks: string[];
+    languages: string[];
+    review_targets: string[];
+    entry_points: string[];
+    confidence: number;
+  };
+  reviews: FileReview[];
+  files_to_review: string[];
+  final_report: string;
+};
+
 export default function Home() {
   const [repoUrl, setRepoUrl] = useState("");
-  const [response, setResponse] = useState<any>(null);
+  const [response, setResponse] = useState<ReviewResponse | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function analyzeRepo() {
-    const res = await fetch("http://127.0.0.1:8000/review/analyze", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        repo_url: repoUrl,
-      }),
-    });
+    setError(null);
+    setResponse(null);
 
-    const data = await res.json();
-    setResponse(data);
+    try {
+      const res = await fetch("http://127.0.0.1:8000/review/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          repo_url: repoUrl,
+        }),
+      });
+
+      const contentType = res.headers.get("content-type") ?? "";
+      const payload = contentType.includes("application/json")
+        ? await res.json()
+        : await res.text();
+
+      if (!res.ok) {
+        throw new Error(
+          typeof payload === "string" ? payload : JSON.stringify(payload)
+        );
+      }
+
+      setResponse(payload);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Request failed");
+    }
   }
 
   return (
@@ -37,6 +86,8 @@ export default function Home() {
       >
         Analyze Repository
       </button>
+
+      {error && <p className="text-red-600">{error}</p>}
 
       {response && (
         <pre className="bg-gray-100 p-4 rounded text-black">
