@@ -32,6 +32,8 @@ async def analyze_repository(request: RepositoryRequest):
         reviews=[],
         cross_file_analysis={},
         final_report="",
+        evaluation={},
+        optimize_attempts=0
     )
     result=graph.invoke(state)
     return{ "summary": result["summary"],

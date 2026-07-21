@@ -1,6 +1,5 @@
 import operator
 from typing import Annotated, TypedDict
-
 class ReviewState(TypedDict):
     repo_url: str
     repo_path: str
@@ -13,6 +12,8 @@ class ReviewState(TypedDict):
     reviews: Annotated[list, operator.add]
     cross_file_analysis: dict
     final_report: str
+    evaluation: dict
+    optimize_attempts: int
 
 
 class FileReviewState(TypedDict):
