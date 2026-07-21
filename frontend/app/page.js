@@ -2,47 +2,14 @@
 
 import { useState } from "react";
 
-type ReviewIssue = {
-  severity: string;
-  category: string;
-  description: string;
-  suggestion: string;
-};
-
-type FileReview = {
-  path: string;
-  score: number;
-  strengths: string[];
-  issues: ReviewIssue[];
-};
-
-type Summary = {
-  project_type: string;
-  purpose: string;
-  architecture: string;
-  technologies: string[];
-  frameworks: string[];
-  languages: string[];
-  review_targets: string[];
-  entry_points: string[];
-  confidence: number;
-};
-
-type ReviewResponse = {
-  summary: Summary;
-  reviews: FileReview[];
-  files_to_review: string[];
-  final_report: string;
-};
-
-function scoreColor(score: number) {
+function scoreColor(score) {
   if (score >= 80) return "text-emerald-600 border-emerald-200 bg-emerald-50";
   if (score >= 50) return "text-yellow-600 border-yellow-200 bg-yellow-50";
   return "text-red-600 border-red-200 bg-red-50";
 }
 
-function severityColor(severity: string) {
-  const s = severity.toLowerCase();
+function severityColor(severity) {
+  const s = severity ? severity.toLowerCase() : "";
   if (s.includes("high") || s.includes("critical"))
     return "bg-red-100 text-red-700";
   if (s.includes("medium") || s.includes("moderate"))
@@ -50,7 +17,7 @@ function severityColor(severity: string) {
   return "bg-gray-200 text-gray-700";
 }
 
-function Tag({ label }: { label: string }) {
+function Tag({ label }) {
   return (
     <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
       {label}
@@ -58,7 +25,7 @@ function Tag({ label }: { label: string }) {
   );
 }
 
-function FileReviewCard({ review }: { review: FileReview }) {
+function FileReviewCard({ review }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -92,7 +59,7 @@ function FileReviewCard({ review }: { review: FileReview }) {
 
       {open && (
         <div className="border-t px-4 py-4 space-y-4 bg-gray-50">
-          {review.strengths.length > 0 && (
+          {review.strengths && review.strengths.length > 0 && (
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
                 Strengths
@@ -108,7 +75,7 @@ function FileReviewCard({ review }: { review: FileReview }) {
             </div>
           )}
 
-          {review.issues.length > 0 && (
+          {review.issues && review.issues.length > 0 && (
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
                 Issues
@@ -149,8 +116,8 @@ function FileReviewCard({ review }: { review: FileReview }) {
 
 export default function Home() {
   const [repoUrl, setRepoUrl] = useState("");
-  const [response, setResponse] = useState<ReviewResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [response, setResponse] = useState(null);
+  const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
   async function analyzeRepo() {
@@ -182,7 +149,7 @@ export default function Home() {
         );
       }
 
-      setResponse(payload as ReviewResponse);
+      setResponse(payload);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Request failed");
     } finally {
@@ -191,7 +158,7 @@ export default function Home() {
   }
 
   const avgScore =
-    response && response.reviews.length > 0
+    response && response.reviews && response.reviews.length > 0
       ? Math.round(
           response.reviews.reduce((sum, r) => sum + r.score, 0) /
             response.reviews.length
@@ -243,43 +210,45 @@ export default function Home() {
         {response && (
           <div className="mt-8 space-y-8">
             {/* Summary */}
-            <section className="border rounded-lg bg-white p-5">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs uppercase tracking-wide text-gray-400 mb-1">
-                    {response.summary.project_type}
-                  </p>
-                  <p className="text-gray-800 text-sm leading-relaxed">
-                    {response.summary.purpose}
-                  </p>
+            {response.summary && (
+              <section className="border rounded-lg bg-white p-5">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs uppercase tracking-wide text-gray-400 mb-1">
+                      {response.summary.project_type}
+                    </p>
+                    <p className="text-gray-800 text-sm leading-relaxed">
+                      {response.summary.purpose}
+                    </p>
+                  </div>
+                  {avgScore !== null && (
+                    <span
+                      className={`shrink-0 text-lg font-semibold px-3 py-1.5 rounded-full border ${scoreColor(
+                        avgScore
+                      )}`}
+                    >
+                      {avgScore}/100
+                    </span>
+                  )}
                 </div>
-                {avgScore !== null && (
-                  <span
-                    className={`shrink-0 text-lg font-semibold px-3 py-1.5 rounded-full border ${scoreColor(
-                      avgScore
-                    )}`}
-                  >
-                    {avgScore}/100
-                  </span>
-                )}
-              </div>
 
-              <p className="text-sm text-gray-600 mt-3">
-                {response.summary.architecture}
-              </p>
+                <p className="text-sm text-gray-600 mt-3">
+                  {response.summary.architecture}
+                </p>
 
-              <div className="flex flex-wrap gap-2 mt-4">
-                {response.summary.languages.map((l) => (
-                  <Tag key={l} label={l} />
-                ))}
-                {response.summary.frameworks.map((f) => (
-                  <Tag key={f} label={f} />
-                ))}
-              </div>
-            </section>
+                <div className="flex flex-wrap gap-2 mt-4">
+                  {response.summary.languages?.map((l) => (
+                    <Tag key={l} label={l} />
+                  ))}
+                  {response.summary.frameworks?.map((f) => (
+                    <Tag key={f} label={f} />
+                  ))}
+                </div>
+              </section>
+            )}
 
             {/* File reviews */}
-            {response.reviews.length > 0 && (
+            {response.reviews && response.reviews.length > 0 && (
               <section>
                 <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">
                   File Reviews ({response.reviews.length})

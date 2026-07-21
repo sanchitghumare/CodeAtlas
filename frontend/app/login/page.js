@@ -53,6 +53,7 @@ export default function LoginPage() {
           <Button
             variant="outline"
             className="h-11 w-full justify-between"
+            asChild
           >
             <Link href="/analyze">
               Analyze Public Repository
