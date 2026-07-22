@@ -7,27 +7,39 @@ import ConnectDb from "@/lib/mongodb";
 export const authOptions = {
   providers: [
     GithubProvider({
-        clientId: process.env.GITHUB_ID,
-        clientSecret: process.env.GITHUB_SECRET,
+      clientId: process.env.GITHUB_ID,
+      clientSecret: process.env.GITHUB_SECRET,
+      authorization: {
+        params: {
+          scope: "read:user user:email repo",
+        }
+      },
     }),
   ],
-   callbacks: {
+  callbacks: {
     async signIn({ user, account }) {
       try {
         if (!user?.email) return false;
 
         if (account?.provider === "github") {
           await ConnectDb();
-          const curruser = await User.findOne({ email: user.email });
 
-          if (!curruser) {
-            await User.create({
+          await User.findOneAndUpdate(
+            { email: user.email },
+            {
               name: user.name || user.email.split("@")[0],
               email: user.email,
               username: user.email.split("@")[0],
               profilepic: user.image || "",
-            });
-          }
+
+              githubId: account.providerAccountId,
+              githubAccessToken: account.access_token,
+            },
+            {
+              upsert: true,
+              new: true,
+            }
+          );
         }
 
         return true;
@@ -35,29 +47,8 @@ export const authOptions = {
         console.error("[auth.signIn]", error);
         return false;
       }
-    },
-    async session({ session }) {
-      try {
-        if (!session?.user?.email) return session;
-
-        await ConnectDb();
-        const dbUser = await User.findOne({ email: session.user.email });
-
-        if (dbUser?.username) {
-          session.user.id = dbUser._id.toString();
-          session.user.name = dbUser.username;
-          session.user.username = dbUser.username;
-          session.username = dbUser.username;
-        }
-
-        return session;
-      } catch (error) {
-        console.error("[auth.session]", error);
-        return session;
-      }
-   },
+    }
   }
 };
-
 const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };

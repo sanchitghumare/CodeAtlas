@@ -3,7 +3,8 @@ from urllib.parse import urlparse
 
 from git import Repo
 from pathlib import Path
-TEMP_DIR=Path("temp")
+TEMP_DIR = Path("C:/Temp/reviewforge")
+TEMP_DIR.mkdir(parents=True, exist_ok=True)
 
 def clone_repo(repo_url: str) -> dict:
     """

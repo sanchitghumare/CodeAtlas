@@ -1,155 +1,153 @@
+
+
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import {
+  ArrowRight,
+  BrainCircuit,
+  CheckCircle2,
+  GitBranch,
+  GitPullRequest,
+  Layers3,
+  ShieldCheck,
+  Sparkles,
+  Zap,
+} from "lucide-react";
 
-function scoreColor(score) {
-  if (score >= 80) return "text-emerald-600 border-emerald-200 bg-emerald-50";
-  if (score >= 50) return "text-yellow-600 border-yellow-200 bg-yellow-50";
-  return "text-red-600 border-red-200 bg-red-50";
-}
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
-function severityColor(severity) {
-  const s = severity ? severity.toLowerCase() : "";
-  if (s.includes("high") || s.includes("critical"))
-    return "bg-red-100 text-red-700";
-  if (s.includes("medium") || s.includes("moderate"))
-    return "bg-amber-100 text-amber-700";
-  return "bg-gray-200 text-gray-700";
-}
+const examples = ["vercel/next.js", "facebook/react", "shadcn-ui/ui"];
 
-function Tag({ label }) {
+const features = [
+  {
+    icon: Zap,
+    title: "Parallel file analysis",
+    description: "Review more code without the long wait.",
+  },
+  {
+    icon: Layers3,
+    title: "Architecture reasoning",
+    description: "Spot concerns that only appear across files.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Self-evaluated output",
+    description: "Every report is graded before it reaches you.",
+    featured: true,
+  },
+  {
+    icon: GitPullRequest,
+    title: "Actionable fixes",
+    description: "Know what matters most and where to start.",
+  },
+];
+
+function RepositoryInput({ value, onChange, onSubmit, loading, compact = false }) {
   return (
-    <span className="text-xs px-2 py-1 rounded-full bg-gray-100 text-gray-700 border border-gray-200">
-      {label}
-    </span>
+    <form onSubmit={onSubmit} className={compact ? "w-full" : "w-full max-w-2xl"}>
+      <div className="flex flex-col gap-2 rounded-xl border border-white/10 bg-white/3 p-2 shadow-2xl shadow-black/20 sm:flex-row sm:items-center">
+        <div className="flex min-w-0 flex-1 items-center gap-3 px-3">
+          <GitBranch className="size-5 shrink-0 text-zinc-400" aria-hidden="true" />
+          <Input
+            value={value}
+            onChange={(event) => onChange(event.target.value)}
+            placeholder="github.com/owner/repo"
+            aria-label="GitHub repository URL"
+            className="h-11 border-0 bg-transparent px-0 font-mono text-sm shadow-none focus-visible:ring-0"
+          />
+        </div>
+        <Button type="submit" size="lg" disabled={loading || !value.trim()} className="h-11 bg-blue-500 px-5 text-white hover:bg-blue-400 disabled:cursor-not-allowed disabled:opacity-40" >
+          {loading ? "Analyzing..." : "Analyze"}
+          {!loading && <ArrowRight className="size-4" aria-hidden="true" />}
+        </Button>
+      </div>
+    </form>
   );
 }
 
-function FileReviewCard({ review }) {
-  const [open, setOpen] = useState(false);
-
+function DashboardPreview() {
   return (
-    <div className="border rounded-lg bg-white overflow-hidden">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between gap-4 p-4 text-left hover:bg-gray-50"
-      >
-        <div className="min-w-0">
-          <p className="font-mono text-sm text-gray-900 truncate">
-            {review.path}
-          </p>
-          <p className="text-xs text-gray-500 mt-1">
-            {review.issues.length} issue
-            {review.issues.length === 1 ? "" : "s"} &middot;{" "}
-            {review.strengths.length} strength
-            {review.strengths.length === 1 ? "" : "s"}
-          </p>
-        </div>
-        <div className="flex items-center gap-3 shrink-0">
-          <span
-            className={`text-sm font-semibold px-3 py-1 rounded-full border ${scoreColor(
-              review.score
-            )}`}
-          >
-            {review.score}/100
-          </span>
-          <span className="text-gray-400 text-sm">{open ? "−" : "+"}</span>
-        </div>
-      </button>
-
-      {open && (
-        <div className="border-t px-4 py-4 space-y-4 bg-gray-50">
-          {review.strengths && review.strengths.length > 0 && (
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
-                Strengths
-              </p>
-              <ul className="space-y-1">
-                {review.strengths.map((s, i) => (
-                  <li key={i} className="text-sm text-gray-800 flex gap-2">
-                    <span className="text-emerald-600">✓</span>
-                    <span>{s}</span>
-                  </li>
-                ))}
-              </ul>
+    <div className="overflow-hidden rounded-xl border border-white/10 bg-[#111216] text-left shadow-2xl shadow-black/30">
+      <div className="flex h-10 items-center gap-2 border-b border-white/10 px-4">
+        <span className="size-2 rounded-full bg-zinc-600" />
+        <span className="size-2 rounded-full bg-zinc-600" />
+        <span className="size-2 rounded-full bg-zinc-600" />
+        <div className="ml-3 h-5 w-44 rounded bg-white/5" />
+      </div>
+      <div className="grid min-h-80 grid-cols-[110px_1fr] sm:min-h-96 sm:grid-cols-[150px_1fr]">
+        <aside className="border-r border-white/10 p-3 text-[10px] text-zinc-500 sm:p-4 sm:text-xs">
+          <div className="mb-6 flex items-center gap-1.5 text-zinc-300">
+            <GitBranch className="size-3" />
+            <span className="truncate font-mono">acme/web</span>
+          </div>
+          {["Overview", "Files", "Architecture", "Trust", "Report"].map((item, index) => (
+            <div key={item} className={`mb-1 rounded-md px-2 py-1.5 ${index === 0 ? "bg-white/10 text-white" : ""}`}>
+              {item}
             </div>
-          )}
-
-          {review.issues && review.issues.length > 0 && (
+          ))}
+        </aside>
+        <div className="p-4 sm:p-7">
+          <div className="mb-5 flex items-end justify-between">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">
-                Issues
-              </p>
-              <div className="space-y-2">
-                {review.issues.map((issue, i) => (
-                  <div
-                    key={i}
-                    className="border rounded-md bg-white p-3 text-sm"
-                  >
-                    <div className="flex items-center gap-2 mb-1">
-                      <span
-                        className={`text-xs font-medium px-2 py-0.5 rounded ${severityColor(
-                          issue.severity
-                        )}`}
-                      >
-                        {issue.severity}
-                      </span>
-                      <span className="text-xs text-gray-500">
-                        {issue.category}
-                      </span>
-                    </div>
-                    <p className="text-gray-800">{issue.description}</p>
-                    <p className="text-gray-500 mt-1">
-                      <span className="font-medium text-gray-600">Fix: </span>
-                      {issue.suggestion}
-                    </p>
-                  </div>
-                ))}
+              <p className="text-xs text-zinc-500">Review overview</p>
+              <p className="mt-1 text-sm font-medium text-white sm:text-base">What needs your attention</p>
+            </div>
+            <span className="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2 py-1 font-mono text-[10px] text-emerald-300">83 / 100</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
+            {[["Health", "83"], ["Files", "24"], ["Critical", "3"], ["Confidence", "0.89"]].map(([label, score]) => (
+              <div key={label} className="rounded-lg border border-white/10 bg-white/2.5 p-2.5 sm:p-3">
+                <p className="text-[9px] text-zinc-500 sm:text-[10px]">{label}</p>
+                <p className="mt-1 font-mono text-base text-white sm:text-lg">{score}</p>
               </div>
+            ))}
+          </div>
+          <div className="mt-4 rounded-lg border border-white/10 bg-white/2.5 p-3 sm:mt-5 sm:p-4">
+            <div className="mb-3 flex items-center justify-between text-[10px] text-zinc-400">
+              <span>FIX FIRST</span><span>3 findings</span>
             </div>
-          )}
+            {["Missing authorization boundary", "Request retries can duplicate writes", "Shared state escapes module"].map((item, index) => (
+              <div key={item} className="flex items-center gap-2 border-t border-white/5 py-2 text-[10px] text-zinc-300 first:border-0 sm:text-xs">
+                <span className={`size-1.5 rounded-full ${index === 0 ? "bg-red-400" : index === 1 ? "bg-amber-400" : "bg-yellow-300"}`} />
+                <span className="truncate">{item}</span>
+              </div>
+            ))}
+          </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
 export default function Home() {
-  const [repoUrl, setRepoUrl] = useState("");
-  const [response, setResponse] = useState(null);
-  const [error, setError] = useState(null);
+  const router = useRouter();
+  const [repository, setRepository] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  async function analyzeRepo() {
-    if (!repoUrl.trim()) return;
+  async function continueToDashboard(event) {
+    event.preventDefault();
+    const trimmedRepository = repository.trim();
+    if (!trimmedRepository) return;
 
     setError(null);
-    setResponse(null);
     setLoading(true);
-
     try {
-      const res = await fetch("http://127.0.0.1:8000/review/analyze", {
+      const res = await fetch("/api/analyze", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          repo_url: repoUrl,
-        }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ repo_url: trimmedRepository }),
       });
-
       const contentType = res.headers.get("content-type") ?? "";
-      const payload = contentType.includes("application/json")
-        ? await res.json()
-        : await res.text();
+      const payload = contentType.includes("application/json") ? await res.json() : await res.text();
+      if (!res.ok) throw new Error(typeof payload === "string" ? payload : JSON.stringify(payload));
 
-      if (!res.ok) {
-        throw new Error(
-          typeof payload === "string" ? payload : JSON.stringify(payload)
-        );
-      }
-
-      setResponse(payload);
+      sessionStorage.setItem("reviewforge-analysis", JSON.stringify({ repository: trimmedRepository, response: payload }));
+      router.push("/dashboard");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Request failed");
     } finally {
@@ -157,123 +155,72 @@ export default function Home() {
     }
   }
 
-  const avgScore =
-    response && response.reviews && response.reviews.length > 0
-      ? Math.round(
-          response.reviews.reduce((sum, r) => sum + r.score, 0) /
-            response.reviews.length
-        )
-      : null;
-
   return (
-    <main className="min-h-screen bg-black">
-      <div className="max-w-3xl mx-auto px-4 py-12">
-        <h1 className="text-2xl font-semibold text-blue-500 mb-1">
-          ReviewForge
-        </h1>
-        <p className="text-gray-500 mb-6">
-          Paste a GitHub repo URL and get an AI code review.
-        </p>
+    <main className="min-h-screen overflow-hidden bg-[#09090b] text-zinc-100">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-0 h-152 bg-[radial-gradient(ellipse_at_top,rgba(37,99,235,0.16),transparent_62%)]" />
+      <div className="relative z-10 mx-auto max-w-7xl px-5 sm:px-8">
+        <header className="flex h-20 items-center justify-between border-b border-white/10">
+          <Link href="/" className="flex items-center gap-2.5 font-semibold tracking-tight text-white" aria-label="ReviewForge home">
+            <span className="grid size-8 place-items-center rounded-lg bg-blue-500 text-white"><BrainCircuit className="size-4" /></span>
+            ReviewForge
+          </Link>
+          <Link href="/login" className="text-sm text-zinc-400 transition-colors hover:text-white">Sign in</Link>
+        </header>
 
-        <div className="flex gap-2">
-          <input
-            type="text"
-            placeholder="https://github.com/owner/repo"
-            value={repoUrl}
-            onChange={(e) => setRepoUrl(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && analyzeRepo()}
-            className="flex-1 border border-gray-300 p-2 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-black"
-          />
-          <button
-            onClick={analyzeRepo}
-            disabled={loading || !repoUrl.trim()}
-            className="bg-blue-700 text-white px-4 py-2 rounded-md text-sm disabled:opacity-40 disabled:cursor-not-allowed"
-          >
-            {loading ? "Analyzing..." : "Analyze"}
-          </button>
-        </div>
-
-        {loading && (
-          <div className="mt-6 text-sm text-gray-500 flex items-center gap-2">
-            <span className="inline-block h-3 w-3 rounded-full border-2 border-gray-300 border-t-black animate-spin" />
-            Cloning, scanning, and reviewing files — this can take a few
-            minutes on local models.
+        <section className="flex flex-col items-center pb-24 pt-24 text-center sm:pb-32 sm:pt-32">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-blue-400/20 bg-blue-400/10 px-3 py-1 text-xs font-medium text-blue-200">
+            <Sparkles className="size-3.5" />
+            Reviews that show their work
           </div>
-        )}
-
-        {error && (
-          <div className="mt-6 border border-red-200 bg-red-50 text-red-700 text-sm rounded-md p-3">
-            {error}
+          <h1 className="max-w-4xl text-balance text-4xl font-semibold tracking-[-0.04em] text-white sm:text-6xl lg:text-7xl">
+            AI code review that grades its own work before you see it.
+          </h1>
+          <p className="mt-6 max-w-2xl text-pretty text-base leading-7 text-zinc-400 sm:text-lg">
+            ReviewForge reasons across your repository, evaluates the quality of every finding, and gives you a report you can trust.
+          </p>
+          <div className="mt-10 w-full max-w-2xl">
+            <RepositoryInput value={repository} onChange={setRepository} onSubmit={continueToDashboard} loading={loading} />
+            {error && <p className="mt-3 text-sm text-red-400">{error}</p>}
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs text-zinc-500">
+              <span>Try an example:</span>
+              {examples.map((example) => (
+                <button key={example} type="button" onClick={() => setRepository(example)} className="rounded-full border border-white/10 px-2.5 py-1 font-mono text-zinc-400 transition-colors hover:border-white/20 hover:bg-white/5 hover:text-zinc-200">
+                  {example}
+                </button>
+              ))}
+            </div>
           </div>
-        )}
+        </section>
 
-        {response && (
-          <div className="mt-8 space-y-8">
-            {/* Summary */}
-            {response.summary && (
-              <section className="border rounded-lg bg-white p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-xs uppercase tracking-wide text-gray-400 mb-1">
-                      {response.summary.project_type}
-                    </p>
-                    <p className="text-gray-800 text-sm leading-relaxed">
-                      {response.summary.purpose}
-                    </p>
-                  </div>
-                  {avgScore !== null && (
-                    <span
-                      className={`shrink-0 text-lg font-semibold px-3 py-1.5 rounded-full border ${scoreColor(
-                        avgScore
-                      )}`}
-                    >
-                      {avgScore}/100
-                    </span>
-                  )}
-                </div>
+        <section className="grid border-y border-white/10 sm:grid-cols-2 lg:grid-cols-4">
+          {features.map(({ icon: Icon, title, description, featured }) => (
+            <article key={title} className={`border-white/10 px-6 py-7 sm:border-r sm:last:border-r-0 lg:px-7 ${featured ? "bg-blue-400/[0.035]" : ""}`}>
+              <Icon className={`mb-4 size-5 ${featured ? "text-blue-300" : "text-zinc-400"}`} strokeWidth={1.5} />
+              <h2 className="text-sm font-medium text-zinc-100">{title}</h2>
+              <p className="mt-2 text-sm leading-6 text-zinc-500">{description}</p>
+            </article>
+          ))}
+        </section>
 
-                <p className="text-sm text-gray-600 mt-3">
-                  {response.summary.architecture}
-                </p>
-
-                <div className="flex flex-wrap gap-2 mt-4">
-                  {response.summary.languages?.map((l) => (
-                    <Tag key={l} label={l} />
-                  ))}
-                  {response.summary.frameworks?.map((f) => (
-                    <Tag key={f} label={f} />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* File reviews */}
-            {response.reviews && response.reviews.length > 0 && (
-              <section>
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">
-                  File Reviews ({response.reviews.length})
-                </h2>
-                <div className="space-y-3">
-                  {response.reviews.map((review) => (
-                    <FileReviewCard key={review.path} review={review} />
-                  ))}
-                </div>
-              </section>
-            )}
-
-            {/* Final report */}
-            {response.final_report && (
-              <section className="border rounded-lg bg-white p-5">
-                <h2 className="text-sm font-semibold uppercase tracking-wide text-gray-500 mb-3">
-                  Final Report
-                </h2>
-                <p className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
-                  {response.final_report}
-                </p>
-              </section>
-            )}
+        <section className="grid items-center gap-12 py-24 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20 sm:py-32">
+          <div>
+            <p className="text-sm font-medium text-blue-300">A review you can inspect</p>
+            <h2 className="mt-4 text-balance text-3xl font-semibold tracking-[-0.035em] text-white sm:text-4xl">See what matters. Understand why it matters.</h2>
+            <p className="mt-5 max-w-md text-base leading-7 text-zinc-400">From the first critical issue to the final report, ReviewForge makes its analysis clear, prioritized, and ready to act on.</p>
+            <div className="mt-7 space-y-3">
+              {["Repository-level context, not isolated comments", "Priorities ranked across every reviewed file", "Confidence and evaluator evidence alongside findings"].map((point) => (
+                <p key={point} className="flex gap-3 text-sm text-zinc-300"><CheckCircle2 className="mt-0.5 size-4 shrink-0 text-blue-300" />{point}</p>
+              ))}
+            </div>
           </div>
-        )}
+          <DashboardPreview />
+        </section>
+
+        <section className="mb-16 rounded-2xl border border-white/10 bg-linear-to-br from-blue-500/10 to-transparent px-6 py-12 text-center sm:mb-24 sm:px-12 sm:py-16">
+          <h2 className="text-2xl font-semibold tracking-[-0.03em] text-white sm:text-3xl">Ready to see your codebase clearly?</h2>
+          <p className="mx-auto mt-3 max-w-xl text-sm leading-6 text-zinc-400">Start with a public GitHub repository. Your review will show every stage of its reasoning.</p>
+          <div className="mx-auto mt-7 max-w-2xl"><RepositoryInput value={repository} onChange={setRepository} onSubmit={continueToDashboard} loading={loading} compact /></div>
+        </section>
       </div>
     </main>
   );

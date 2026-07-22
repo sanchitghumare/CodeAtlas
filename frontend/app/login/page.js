@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { signIn } from "next-auth/react";
 import { GitBranch, ArrowRight, ShieldCheck } from "lucide-react";
-
+import { signIn, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -15,6 +16,16 @@ import {
 import { Separator } from "@/components/ui/separator";
 
 export default function LoginPage() {
+  const { status, data: session } = useSession();
+  console.log("status:", status);
+  console.log("session:", session);
+  const router = useRouter();
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.replace("/dashboard"); 
+    }
+  }, [status, router]);
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-6">
       <Card className="w-full max-w-md border-border/60 shadow-xl">
@@ -36,7 +47,7 @@ export default function LoginPage() {
         <CardContent className="space-y-6">
           <Button
             className="h-11 w-full gap-2 text-base"
-            onClick={() => signIn("github")}
+            onClick={() => signIn("github", { callbackUrl: "/dashboard" })}
           >
             <GitBranch className="h-5 w-5" />
             Continue with GitHub
@@ -53,7 +64,6 @@ export default function LoginPage() {
           <Button
             variant="outline"
             className="h-11 w-full justify-between"
-            asChild
           >
             <Link href="/analyze">
               Analyze Public Repository
