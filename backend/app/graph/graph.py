@@ -9,7 +9,7 @@ from app.graph.nodes.synthesize_report import synthesize_report
 from app.graph.nodes.Evaluator import evaluate_report
 from app.graph.nodes.optimizer import optimize_report
 
-MAX_OPTIMIZE_ATTEMPTS = 2
+MAX_OPTIMIZE_ATTEMPTS = 1
 CONFIDENCE_THRESHOLD = 0.7
 
 

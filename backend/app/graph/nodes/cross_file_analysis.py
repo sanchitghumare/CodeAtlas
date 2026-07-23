@@ -146,5 +146,7 @@ def cross_file_analysis(state: ReviewState):
 
             You are performing an architectural synthesis, NOT another code review."""
     response=llm.invoke(prompt)
-    state["cross_file_analysis"] = json.loads(str(response.content))
-    return state
+    return{
+      "cross_file_analysis": json.loads(str(response.content))
+    }
+

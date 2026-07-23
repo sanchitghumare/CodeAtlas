@@ -80,4 +80,4 @@ def synthesize_report(state: ReviewState):
     response = llm.invoke(prompt)
     state["final_report"] = _coerce_text_content(response.content)
     print("Report ready.", flush=True)
-    return state
+    return {"final_report": _coerce_text_content(response.content)}

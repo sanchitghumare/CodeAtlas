@@ -31,7 +31,6 @@ export const authOptions = {
               email: user.email,
               username: user.email.split("@")[0],
               profilepic: user.image || "",
-
               githubId: account.providerAccountId,
               githubAccessToken: account.access_token,
             },
@@ -47,8 +46,31 @@ export const authOptions = {
         console.error("[auth.signIn]", error);
         return false;
       }
-    }
-  }
+    },
+
+    async jwt({ token }) {
+      if (token.email) {
+        await ConnectDb();
+
+        const dbUser = await User.findOne({
+          email: token.email,
+        });
+
+        if (dbUser) {
+          token.id = dbUser._id.toString();
+        }
+      }
+
+      return token;
+    },
+
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id;
+      }
+      return session;
+    },
+  },
 };
 const handler = NextAuth(authOptions);
 export { handler as GET, handler as POST };

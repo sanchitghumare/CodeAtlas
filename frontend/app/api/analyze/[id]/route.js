@@ -18,10 +18,7 @@ export async function GET(req, { params }) {
 
   const { id } = await params;
 
-  const analysis = await Analysis.findOne({
-    _id: id,
-    user: user._id,
-  });
+  const analysis = await Analysis.findOne({ _id: id, user: user._id });
 
   if (!analysis) {
     return NextResponse.json(

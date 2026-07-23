@@ -84,5 +84,4 @@ def summarize_repository(state: ReviewState):
         state["summary"] = response.model_dump()
     else:
         state["summary"] = response
-   
-    return state
+    return state["summary"]

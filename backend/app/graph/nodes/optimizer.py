@@ -88,5 +88,7 @@ def optimize_report(state: ReviewState):
     state["final_report"] = cast(str, response.content)
     state["optimize_attempts"] = state.get("optimize_attempts", 0) + 1
     print(f"Optimize attempt {state['optimize_attempts']} complete.", flush=True)
-
-    return state
+    return {
+        "final_report": cast(str, response.content),
+        "optimize_attempts": state['optimize_attempts'],
+    }

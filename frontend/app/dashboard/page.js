@@ -1,24 +1,34 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  BrainCircuit, Search, Bell, Star, GitFork, Lock, Globe2, ChevronRight, Sparkles, FileCode2, ShieldAlert, Clock3, GitBranch, ArrowUpRight, UploadCloud, History,
+  BrainCircuit, Bell, Star, GitFork, Lock, Globe2, ChevronRight, Sparkles, FileCode2, ShieldAlert, Clock3, GitBranch, ArrowUpRight, UploadCloud, History,
   PlayCircle, Check, Plus, Minus, Loader2, CheckCircle2, XCircle,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { Button } from "@/components/ui/button";
 import { signOut } from "next-auth/react";
-import { useEffect } from "react";
 import RepoCard from "@/components/ui/RepoCard";
+import StatusBadge from "@/components/ui/StatusBadge";
 import { useRouter } from "next/navigation";
-
+import RepositoryInput from "@/components/ui/RepositoryInput";
+const scoreClass = (score) =>
+  score >= 80
+    ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
+    : score >= 50
+      ? "border-amber-500/30 bg-amber-500/10 text-amber-300"
+      : "border-rose-500/30 bg-rose-500/10 text-rose-300";
 
 export default function Home() {
-  // const [analysis] = useState(readSavedAnalysis);
   const [showAllRepos, setShowAllRepos] = useState(false);
   const [analyzingId, setAnalyzingId] = useState(null);
   const [repositories, setRepositories] = useState([]);
   const [loadingRepos, setLoadingRepos] = useState(true);
+  const [recentReviews, setRecentReviews] = useState([]);
+  const [loadingReviews, setLoadingReviews] = useState(true);
+  const [repoUrl, setRepoUrl] = useState("");
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
   useEffect(() => {
     async function fetchRepos() {
@@ -49,6 +59,21 @@ export default function Home() {
 
     fetchRepos();
   }, []);
+  useEffect(() => {
+    async function fetchRecentReviews() {
+      try {
+        const res = await fetch("/api/analyze");
+        if (!res.ok) throw new Error("Unable to load recent reviews");
+        setRecentReviews(await res.json());
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoadingReviews(false);
+      }
+    }
+
+    fetchRecentReviews();
+  }, []);
   const session = useSession();
   const user = session?.data?.user?.username || null;
   const avatarUrl = session?.data?.user?.image || null;
@@ -56,11 +81,10 @@ export default function Home() {
   const visibleRepos = showAllRepos ? repositories : repositories.slice(0, 3);
 
   async function handleAnalyze(repo) {
-     console.log("handleAnalyze called", repo);
+    console.log("handleAnalyze called", repo);
     setAnalyzingId(repo.id);
 
     try {
-      console.log("1");
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: {
@@ -78,10 +102,37 @@ export default function Home() {
       if (!res.ok) {
         throw new Error(data.error || "Analysis failed");
       }
+      router.push(`/analysis/${data.analysisId}?jobId=${encodeURIComponent(data.jobId)}`);
     } finally {
       setAnalyzingId(null);
     }
     setTimeout(() => setAnalyzingId(null), 1600);
+  }
+  const [showInput, setShowInput] = useState(false);
+  async function handleAnalyzeUrl(e) {
+    e.preventDefault();
+
+    try {
+      const res = await fetch("/api/analyze", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          repo_url: repoUrl,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || "Analysis failed");
+      }
+
+      router.push(`/analysis/${data.analysisId}?jobId=${encodeURIComponent(data.jobId)}`);
+    } catch (err) {
+      console.error(err);
+    }
   }
   return (
     <main className="min-h-screen overflow-hidden bg-[#09090b] text-zinc-100">
@@ -98,16 +149,6 @@ border-b border-zinc-900">
             </span>
             <span className="hidden sm:inline">ReviewForge</span>
           </Link>
-
-          <div className="relative hidden flex-1 max-w-md sm:block">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
-            <input
-              type="text"
-              placeholder="Search repositories..."
-              disabled
-              className="w-full rounded-lg border border-white/10 bg-white/5 py-2 pl-9 pr-3 text-sm text-zinc-300 placeholder:text-zinc-500 outline-none transition-colors focus:border-white/20 disabled:cursor-not-allowed"
-            />
-          </div>
 
           <div className="flex items-center gap-3">
             <button className="relative grid size-9 shrink-0 place-items-center rounded-lg border border-white/10 text-zinc-400 transition-colors hover:text-white hover:border-zinc-700">
@@ -161,13 +202,20 @@ border-b border-zinc-900">
             </div>
           </div>
 
-          <Link
-            href="#repositories"
-            className="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-400"
-          >
-            <Sparkles className="size-4" />
-            Analyze New Repository
-          </Link>
+          {!showInput ? (
+            <Button onClick={() => setShowInput(true)} className="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-400">
+              <Sparkles className="size-4" />
+              Analyze New Repository
+            </Button>
+          ) : (
+            <RepositoryInput
+              value={repoUrl}
+              onChange={setRepoUrl}
+              onSubmit={handleAnalyzeUrl}
+              loading={loading}
+              compact
+            />
+          )}
         </section>
 
         {/* Quick Stats */}
@@ -215,7 +263,7 @@ border-b border-zinc-900">
                 <RepoCard
                   key={repo.id}
                   repo={repo}
-                  onAnalyze={()=>handleAnalyze(repo)}
+                  onAnalyze={() => handleAnalyze(repo)}
                   analyzing={analyzingId === repo.id}
                 />
               ))}
@@ -224,12 +272,18 @@ border-b border-zinc-900">
         </section>
 
         {/* Recent Reviews */}
-        {/* <section className="mt-12">
+        <section id="recent-reviews" className="mt-12 scroll-mt-20">
           <h2 className="mb-4 text-sm font-medium uppercase tracking-wider text-zinc-400">
             Recent Reviews
           </h2>
 
-          {recentReviews.length === 0 ? (
+          {loadingReviews ? (
+            <div className="rounded-xl border border-white/10 bg-[#111216] p-5">
+              <div className="space-y-3 animate-pulse">
+                {[0, 1, 2].map((item) => <div key={item} className="h-10 rounded-lg bg-white/5" />)}
+              </div>
+            </div>
+          ) : recentReviews.length === 0 ? (
             <div className="rounded-xl border border-dashed border-white/10 p-10 text-center">
               <History className="mx-auto size-6 text-zinc-600" />
               <p className="mt-3 text-sm text-zinc-400">No reviews yet.</p>
@@ -240,7 +294,7 @@ border-b border-zinc-900">
           ) : (
             <div className="overflow-hidden rounded-xl border border-white/10 bg-[#111216]">
               {/* Header row - desktop only */}
-        {/* <div className="hidden grid-cols-[1.5fr_1fr_1fr_0.7fr] gap-4 border-b border-white/10 px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-zinc-500 sm:grid">
+              <div className="hidden grid-cols-[1.5fr_1fr_1fr_0.7fr] gap-4 border-b border-white/10 px-5 py-3 text-[10px] font-semibold uppercase tracking-wider text-zinc-500 sm:grid">
                 <span>Repository</span>
                 <span>Date</span>
                 <span>Status</span>
@@ -249,9 +303,10 @@ border-b border-zinc-900">
 
               <div className="divide-y divide-white/5">
                 {recentReviews.map((r) => (
-                  <div
+                  <Link
+                    href={`/analysis/${r.id}`}
                     key={r.id}
-                    className="grid grid-cols-2 gap-4 px-5 py-4 text-sm transition-colors hover:bg-white/2 sm:grid-cols-[1.5fr_1fr_1fr_0.7fr] sm:items-center"
+                    className="grid grid-cols-2 gap-4 px-5 py-4 text-sm transition-colors hover:bg-white/5 sm:grid-cols-[1.5fr_1fr_1fr_0.7fr] sm:items-center"
                   >
                     <span className="col-span-2 truncate font-mono text-zinc-200 sm:col-span-1">
                       {r.repository}
@@ -269,7 +324,7 @@ border-b border-zinc-900">
                     <span className="text-right font-mono text-xs">
                       {r.score !== null ? (
                         <span
-                          className={`inline-flex rounded-full border px-2 py-0.5 font-semibold ${scoreColor(
+                          className={`inline-flex rounded-full border px-2 py-0.5 font-semibold ${scoreClass(
                             r.score
                           )}`}
                         >
@@ -279,12 +334,12 @@ border-b border-zinc-900">
                         <span className="text-zinc-600">&mdash;</span>
                       )}
                     </span>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </div>
           )}
-        </section> */} */
+        </section>
 
         {/* Quick Actions */}
         <section className="mt-12">
@@ -308,20 +363,6 @@ border-b border-zinc-900">
               <ArrowUpRight className="ml-auto size-4 text-zinc-600 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
             </Link>
 
-            <button
-              disabled
-              className="flex cursor-not-allowed items-center gap-3 rounded-xl border border-white/10 bg-[#111216] p-4 text-left opacity-60"
-            >
-              <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-white/5 text-zinc-400">
-                <UploadCloud className="size-4" />
-              </span>
-              <div>
-                <p className="text-sm font-medium text-zinc-100">
-                  Upload Local Repository
-                </p>
-                <p className="text-xs text-zinc-500">Coming soon</p>
-              </div>
-            </button>
 
             <Link
               href="#recent-reviews"
@@ -340,8 +381,6 @@ border-b border-zinc-900">
             </Link>
           </div>
         </section>
-
-        {/* Saved analysis results, preserved from the previous page */}
       </div>
     </main>
   );

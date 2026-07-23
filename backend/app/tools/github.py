@@ -3,8 +3,8 @@ from urllib.parse import urlparse
 
 from git import Repo
 from pathlib import Path
-TEMP_DIR = Path("C:/Temp/reviewforge")
-TEMP_DIR.mkdir(parents=True, exist_ok=True)
+import tempfile
+TEMP_DIR = Path(tempfile.gettempdir()) / "reviewforge"
 
 def clone_repo(repo_url: str) -> dict:
     """
@@ -13,15 +13,13 @@ def clone_repo(repo_url: str) -> dict:
     parsed_url = urlparse(repo_url)
     repo_name = parsed_url.path.lstrip("/").split("/")[-1]
     destination = TEMP_DIR / repo_name
-   
-    if destination.exists():
-     return {
-        "repo_name": repo_name,
-        "local_path": str(destination)
-    }
-
     print(f"Cloning {repo_name}...")
-    Repo.clone_from(repo_url, destination)
+    if destination.exists():
+     repo = Repo(destination)
+     repo.remotes.origin.pull()
+    else:
+     Repo.clone_from(repo_url, destination)
+
     print("Clone completed.")
     return {
         "repo_name": repo_name,

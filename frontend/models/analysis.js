@@ -18,9 +18,21 @@ const AnalysisSchema = new mongoose.Schema(
       required: true,
     },
 
+    jobId: {
+      type: String,
+      default: null,
+      index: true,
+    },
+
     response: {
       type: mongoose.Schema.Types.Mixed,
-      required: true,
+      default: null,
+    },
+
+    status: {
+      type: String,
+      enum: ["In Progress", "Completed", "Failed"],
+      default: "In Progress",
     },
   },
   {

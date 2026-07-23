@@ -198,4 +198,7 @@ def evaluate_report(state: ReviewState):
         f"passed={state['evaluation'].get('passed')}",
         flush=True,
     )
-    return state
+    # LangGraph expects node output as a partial state update. Returning the
+    # evaluation object itself drops it at the top level, so the conditional
+    # router sees the old empty `evaluation` state.
+    return {"evaluation": state["evaluation"]}
