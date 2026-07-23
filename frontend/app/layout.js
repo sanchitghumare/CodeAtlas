@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
-  title: "ReviewForge",
+  title: "CodeAtlas",
   description: "AI Code Review",
 };
 

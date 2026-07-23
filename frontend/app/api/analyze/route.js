@@ -91,7 +91,7 @@ export async function POST(req) {
         });
 
         const fastApiResponse = await fetch(
-            "http://127.0.0.1:8000/review/analyze/start",
+            `${process.env.NEXT_PUBLIC_FASTAPI_URL}/review/analyze/start`,
             {
                 method: "POST",
                 headers: {

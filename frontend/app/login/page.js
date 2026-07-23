@@ -27,7 +27,7 @@ export default function LoginPage() {
     }
   }, [status, router]);
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-6">
+    <main className="flex min-h-screen items-center justify-center px-6 bg-zinc-900">
       <Card className="w-full max-w-md border-border/60 shadow-xl">
         <CardHeader className="space-y-3 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
@@ -35,7 +35,7 @@ export default function LoginPage() {
           </div>
 
           <CardTitle className="text-3xl font-bold">
-            Welcome to ReviewForge
+            Welcome to CodeAtlas
           </CardTitle>
 
           <CardDescription className="text-sm leading-6">
@@ -65,7 +65,7 @@ export default function LoginPage() {
             variant="outline"
             className="h-11 w-full justify-between"
           >
-            <Link href="/analyze">
+            <Link href="/">
               Analyze Public Repository
               <ArrowRight className="h-4 w-4" />
             </Link>
@@ -80,7 +80,7 @@ export default function LoginPage() {
 
                 <p className="text-muted-foreground">
                   GitHub authentication is only used to access repositories you
-                  choose to review. ReviewForge never modifies your code.
+                  choose to review. CodeAtlas never modifies your code.
                 </p>
               </div>
             </div>

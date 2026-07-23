@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
-  BrainCircuit, Bell, Star, GitFork, Lock, Globe2, ChevronRight, Sparkles, FileCode2, ShieldAlert, Clock3, GitBranch, ArrowUpRight, UploadCloud, History,
-  PlayCircle, Check, Plus, Minus, Loader2, CheckCircle2, XCircle,
+  GitPullRequest, Bell, ChevronRight, Sparkles, GitBranch, ArrowUpRight, History,
+  PlayCircle,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Button } from "@/components/ui/button";
@@ -145,16 +145,13 @@ border-b border-zinc-900">
             className="flex shrink-0 items-center gap-2.5 font-semibold tracking-tight text-white"
           >
             <span className="grid size-8 place-items-center rounded-lg bg-blue-500 text-white">
-              <BrainCircuit className="size-4" />
+              <GitPullRequest className="size-4" />
             </span>
-            <span className="hidden sm:inline">ReviewForge</span>
+            <span className="hidden sm:inline">CodeAtlas</span>
           </Link>
 
           <div className="flex items-center gap-3">
-            <button className="relative grid size-9 shrink-0 place-items-center rounded-lg border border-white/10 text-zinc-400 transition-colors hover:text-white hover:border-zinc-700">
-              <Bell className="size-4" />
-              <span className="absolute right-2 top-2 size-1.5 rounded-full bg-blue-500" />
-            </button>
+            
             {avatarUrl ? (
               <img
                 src={avatarUrl}

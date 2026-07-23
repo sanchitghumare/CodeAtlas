@@ -29,7 +29,7 @@ async def chat(request: ChatRequest):
             {analysis.get("final_report")}
             """
     prompt = f"""
-You are ReviewForge AI.
+You are CodeAtlas AI.
 
 You previously analyzed a GitHub repository.
 

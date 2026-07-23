@@ -9,7 +9,7 @@ def cross_file_analysis(state: ReviewState):
     reviews = json.dumps(state["reviews"], indent=2)
 
     prompt=f"""
-           You are ReviewForge's Cross-File Analysis Agent, acting as a Staff Software Engineer conducting a repository-wide architectural review.
+           You are CodeAtlas's Cross-File Analysis Agent, acting as a Staff Software Engineer conducting a repository-wide architectural review.
 
             ## Context
             summary: {summary}

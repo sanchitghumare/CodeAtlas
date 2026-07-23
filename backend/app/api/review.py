@@ -1,11 +1,8 @@
 import asyncio
 import json
-from collections.abc import Generator
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
-
 from app.services.schemas.review import RepositoryRequest
 from app.tools.github import clone_repo
 from app.tools.scanner import scan_repository

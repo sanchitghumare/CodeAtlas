@@ -6,8 +6,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import {
   AlertTriangle,
   ArrowLeft,
-  Bot,
-  CheckCircle2,
+  GitPullRequest,
   FileCode2,
   GitBranch,
   Layers3,
@@ -181,7 +180,7 @@ export default function AnalysisPage() {
             <h1 className="truncate text-3xl font-semibold tracking-tight text-white sm:text-4xl">{repository}</h1>
             <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-zinc-500"><span className="inline-flex items-center gap-1.5"><GitBranch className="size-3.5" />Repository analysis</span><span>Reviewed {reviewedAt}</span></div>
           </div>
-          <div className="flex items-center gap-3"><span className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/25 bg-indigo-500/10 px-3 py-1.5 text-sm font-medium text-indigo-200"><Bot className="size-4" />Reviewed with AI</span><span className={`rounded-xl border px-3 py-2 text-sm font-semibold ${scoreClass(score)}`}>{score}<span className="ml-1 text-xs font-medium opacity-70">/ 100</span></span></div>
+          <div className="flex items-center gap-3"><span className={`rounded-xl border px-3 py-2 text-sm font-semibold ${scoreClass(score)}`}>{score}<span className="ml-1 text-xs font-medium opacity-70">/ 100</span></span></div>
         </section>
 
         <div className="flex w-full gap-1 overflow-x-auto rounded-xl border border-white/10 bg-white/[0.035] p-1 sm:w-fit" role="tablist" aria-label="Analysis sections">
@@ -191,7 +190,7 @@ export default function AnalysisPage() {
         {activeTab === "overview" && <>
           <section id="overview" className="rounded-3xl border border-white/10 bg-linear-to-br from-indigo-500/12 via-[#121217] to-[#111116] p-6 shadow-2xl shadow-black/20 sm:p-8">
             <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
-              <div className="max-w-3xl"><div className="mb-4 inline-flex size-10 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-300 ring-1 ring-indigo-400/20"><Sparkles className="size-5" /></div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-300">Executive summary</p><h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">{response.summary?.project_type || "AI-powered project health review"}</h2><p className="mt-3 text-sm leading-6 text-zinc-300">{response.summary?.purpose || "Your codebase has been reviewed for quality, maintainability, and risks across the analyzed files."}</p><div className="mt-5 flex flex-wrap gap-2">{[...(response.summary?.languages || []), ...(response.summary?.frameworks || [])].map((tag) => <span key={tag} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-zinc-300">{tag}</span>)}</div></div>
+              <div className="max-w-3xl"><div className="mb-4 inline-flex size-10 items-center justify-center rounded-xl bg-indigo-500/15 text-indigo-300 ring-1 ring-indigo-400/20"><GitPullRequest className="size-5" /></div><p className="text-xs font-semibold uppercase tracking-[0.18em] text-indigo-300">Executive summary</p><h2 className="mt-2 text-2xl font-semibold tracking-tight text-white">{response.summary?.project_type || "AI-powered project health review"}</h2><p className="mt-3 text-sm leading-6 text-zinc-300">{response.summary?.purpose || "Your codebase has been reviewed for quality, maintainability, and risks across the analyzed files."}</p><div className="mt-5 flex flex-wrap gap-2">{[...(response.summary?.languages || []), ...(response.summary?.frameworks || [])].map((tag) => <span key={tag} className="rounded-full border border-white/10 bg-white/5 px-2.5 py-1 text-xs text-zinc-300">{tag}</span>)}</div></div>
               <div className="flex items-center gap-5 rounded-2xl border border-white/10 bg-black/20 p-5"><div className="relative grid size-24 place-items-center rounded-full bg-[conic-gradient(#818cf8_var(--score),#27272a_0)]" style={{ "--score": `${score}%` }}><div className="grid size-19.5 place-items-center rounded-full bg-[#15151b]"><span className="text-xl font-semibold">{score}</span></div></div><div><p className="text-xs uppercase tracking-wider text-zinc-500">Project health</p><p className="mt-1 text-lg font-semibold text-white">{score >= 80 ? "Healthy" : score >= 50 ? "Needs attention" : "At risk"}</p><span className={`mt-2 inline-flex rounded-full border px-2 py-0.5 text-xs font-medium ${risk.className}`}>{risk.label}</span></div></div>
             </div>
           </section>

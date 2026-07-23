@@ -19,9 +19,8 @@ export async function POST(_request, { params }) {
   if (analysis.status === "Completed") return NextResponse.json(analysis);
 
   console.log(`Fetching completed result for job ${jobId}`);
-  const result = await fetch(`http://127.0.0.1:8000/review/analyze/${jobId}/result`, { cache: "no-store" });
+  const result = await fetch(`${process.env.NEXT_PUBLIC_FASTAPI_URL}/review/analyze/${jobId}/result`, { cache: "no-store" });
   if (!result.ok) return NextResponse.json({ error: "Analysis is not complete" }, { status: 409 });
-
   console.log(`Result received; saving analysis ${analysis._id}`);
   analysis.response = await result.json();
   analysis.status = "Completed";

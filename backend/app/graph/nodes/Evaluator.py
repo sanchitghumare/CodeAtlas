@@ -29,7 +29,7 @@ def evaluate_report(state: ReviewState):
         for r in reviews
     )
 
-    prompt = f"""You are ReviewForge's Evaluation Agent.
+    prompt = f"""You are CodeAtlas's Evaluation Agent.
 
         You are NOT a code reviewer.
 

@@ -4,7 +4,7 @@ from urllib.parse import urlparse
 from git import Repo
 from pathlib import Path
 import tempfile
-TEMP_DIR = Path(tempfile.gettempdir()) / "reviewforge"
+TEMP_DIR = Path(tempfile.gettempdir()) / "CodeAtlas"
 
 def clone_repo(repo_url: str) -> dict:
     """

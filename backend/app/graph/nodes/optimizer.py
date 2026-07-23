@@ -45,7 +45,7 @@ def optimize_report(state: ReviewState):
 
     weaknesses_block = "\n".join(f"- {w}" for w in weaknesses) or "None listed."
 
-    prompt = f"""You are ReviewForge's Optimizer Agent.
+    prompt = f"""You are CodeAtlas's Optimizer Agent.
 
         You are given a final repository review report and an evaluator's
         critique of that report. Your job is to REWRITE the report so it

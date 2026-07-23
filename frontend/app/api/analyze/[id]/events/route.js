@@ -19,7 +19,7 @@ export async function GET(_request, { params }) {
   const analysis = await Analysis.findOne({ jobId, user: user?._id, status: "In Progress" }).select("_id status");
   if (!analysis) return NextResponse.json({ error: "Analysis not found" }, { status: 404 });
 
-  const upstream = await fetch(`http://127.0.0.1:8000/review/analyze/${jobId}/events`, { cache: "no-store" });
+  const upstream = await fetch(`${process.env.NEXT_PUBLIC_FASTAPI_URL}/review/analyze/${jobId}/events`, { cache: "no-store" });
   if (!upstream.ok || !upstream.body) return NextResponse.json({ error: "Progress stream unavailable" }, { status: upstream.status });
   console.log(`Upstream SSE connection opened for job ${jobId}`);
 
