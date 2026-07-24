@@ -36,6 +36,7 @@ export async function GET(_request, { params }) {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache, no-transform",
       Connection: "keep-alive",
+       "X-Internal-Token": process.env.INTERNAL_API_TOKEN,
     },
   });
 }

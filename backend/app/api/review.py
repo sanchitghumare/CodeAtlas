@@ -2,8 +2,9 @@ import asyncio
 import json
 import threading
 import time
-from uuid import uuid4
+from uuid import UUID, uuid4
 
+from app.core.auth import verify_internal_token
 from app.core.limiter import limiter
 from app.graph.graph import graph
 from app.graph.state import ReviewState
@@ -14,7 +15,7 @@ from app.tools.github import CloneError, CloneTimeoutError, cleanup_repo, clone_
 from app.tools.reader import read_readme
 from app.tools.scanner import scan_repository
 from app.tools.tree import build_directory_tree
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import StreamingResponse
 
@@ -24,7 +25,7 @@ TERMINAL_STATUSES = {"completed", "failed"}
 
 
 class AnalysisStartRequest(RepositoryRequest):
-    job_id: str
+    job_id: UUID
 
 
 class AnalysisCancelled(RuntimeError):
@@ -193,21 +194,22 @@ def _create_job(repo_url: str, job_id: str, loop: asyncio.AbstractEventLoop) -> 
 @router.post("/analyze/start")
 @limiter.limit("5/minute")
 async def start_analysis( request: Request,
-    body: AnalysisStartRequest,):
-    if body.job_id in jobs:
-        job = jobs[body.job_id]
+    body: AnalysisStartRequest,
+     _: None = Depends(verify_internal_token)):
+    if str(body.job_id) in jobs:
+        job = jobs[str(body.job_id)]
         return {"job_id": body.job_id, "status": job["status"]}
 
     loop = asyncio.get_running_loop()
-    job = _create_job(str(body.repo_url), body.job_id, loop)
-    task = asyncio.create_task(_run_with_timeout(str(body.repo_url), body.job_id))
+    job = _create_job(str(body.repo_url), str(body.job_id), loop)
+    task = asyncio.create_task(_run_with_timeout(str(body.repo_url), str(body.job_id)))
     job["task"] = task
     return {"job_id": body.job_id, "status": "running"}
 
 
 @router.get("/analyze/{job_id}/events")
 @limiter.limit("60/minute")
-async def stream_analysis_events( request: Request,job_id: str):
+async def stream_analysis_events( request: Request,job_id: str, _: None = Depends(verify_internal_token)):
     job = jobs.get(job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Analysis job not found")
@@ -224,7 +226,7 @@ async def stream_analysis_events( request: Request,job_id: str):
 
 
 @router.get("/analyze/{job_id}/result")
-async def get_analysis_result(job_id: str):
+async def get_analysis_result(job_id: str, _: None = Depends(verify_internal_token)):
     job = jobs.get(job_id)
     if not job:
         raise HTTPException(status_code=404, detail="Analysis job not found")

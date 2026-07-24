@@ -45,7 +45,9 @@ def clone_repo(repo_url: str, job_id: str) -> dict:
         raise CloneError("The repository URL is invalid.")
 
     repo_name = parts[-1].removesuffix(".git")
-    destination = TEMP_DIR / job_id
+    destination =  (TEMP_DIR / job_id).resolve()
+    if TEMP_DIR.resolve() not in destination.parents:
+      raise ValueError("Invalid job id")
     cleanup_repo(destination)
     TEMP_DIR.mkdir(parents=True, exist_ok=True)
     print(f"Cloning {repo_name}...", flush=True)
