@@ -1,4 +1,5 @@
 import asyncio
+import os
 from contextlib import asynccontextmanager
 
 from app.api.chat import router as chat_router
@@ -11,7 +12,7 @@ from fastapi.responses import JSONResponse
 from slowapi.errors import RateLimitExceeded
 from slowapi.middleware import SlowAPIMiddleware
 
-
+FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 async def _job_cleanup_loop() -> None:
     while True:
         await asyncio.sleep(JOB_CLEANUP_INTERVAL)
@@ -46,7 +47,7 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
 app.add_middleware(SlowAPIMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[FRONTEND_URL],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
