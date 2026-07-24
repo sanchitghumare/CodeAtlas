@@ -1,7 +1,7 @@
 from pathlib import Path
 
 
-def build_directory_tree(repo_path: str, depth=2)-> dict:
+def build_directory_tree(repo_path: str, depth=2) -> dict:
     root = Path(repo_path)
     tree = {"name": root.name, "type": "directory", "children": []}
     IGNORE_DIRS = {

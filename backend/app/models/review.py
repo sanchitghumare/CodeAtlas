@@ -1,10 +1,14 @@
-from pydantic import BaseModel
+from pydantic import (
+    BaseModel,
+)
+
 
 class Issue(BaseModel):
     severity: str
     category: str
     description: str
     suggestion: str
+
 
 class FileReview(BaseModel):
     path: str
@@ -38,5 +42,3 @@ class Evaluation(BaseModel):
     weaknesses: list[str]
     feedback: list[FeedbackItem]
     confidence: float
-
-    

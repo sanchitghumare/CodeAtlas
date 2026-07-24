@@ -38,7 +38,7 @@ SOURCE_EXTENSIONS = {
     ".go",
     ".rs",
 }
-Max_files=3
+Max_files = 3
 HIGH_PRIORITY = [
     "app/api",
     "actions",
@@ -59,6 +59,8 @@ LOW_PRIORITY = [
     "__tests__",
     "docs",
 ]
+
+
 def priority(path: str):
     if any(path.startswith(p) for p in HIGH_PRIORITY):
         return 0
@@ -66,13 +68,14 @@ def priority(path: str):
         return 1
     return 2
 
+
 def select_review_files(state):
-    repo=Path(state["repo_path"])
+    repo = Path(state["repo_path"])
     files_to_review = []
     for path in repo.rglob("*"):
         if path.is_file():
             if not path.is_file():
-              continue
+                continue
             if path.suffix in SKIP_EXTENSIONS:
                 continue
             if any(part in SKIP_DIRS for part in path.parts):

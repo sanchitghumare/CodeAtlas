@@ -19,8 +19,7 @@ def evaluate_report(state: ReviewState):
         f"Issues:\n"
         + (
             "\n".join(
-                f"  - [{i.severity}/{i.category}] {i.description} "
-                f"(fix: {i.suggestion})"
+                f"  - [{i.severity}/{i.category}] {i.description} (fix: {i.suggestion})"
                 for i in r.issues
             )
             if r.issues
@@ -177,8 +176,10 @@ def evaluate_report(state: ReviewState):
     print("Evaluating final report...", flush=True)
     try:
         evaluation = structured_llm.invoke(prompt)
-        state["evaluation"] = evaluation if isinstance(evaluation, dict) else evaluation.model_dump()
-    except Exception as exc:
+        state["evaluation"] = (
+            evaluation if isinstance(evaluation, dict) else evaluation.model_dump()
+        )
+    except Exception as exc:  # noqa: BLE001
         print(f"Evaluation failed: {exc}", flush=True)
         state["evaluation"] = {
             "overall_score": 0,

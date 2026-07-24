@@ -1,11 +1,11 @@
-from app.services.llm import llm
 from app.graph.state import ReviewState
+from app.services.llm import llm
 
 
 def build_prompt(state: ReviewState) -> str:
     summary = state["summary"]
     reviews = state["reviews"]
-    cross_file_analysis=state["cross_file_analysis"]
+    cross_file_analysis = state["cross_file_analysis"]
     reviews_block = "\n\n".join(
         f"File: {r.path}\n"
         f"Score: {r.score}/100\n"
@@ -13,8 +13,7 @@ def build_prompt(state: ReviewState) -> str:
         f"Issues:\n"
         + (
             "\n".join(
-                f"  - [{i.severity}/{i.category}] {i.description} "
-                f"(fix: {i.suggestion})"
+                f"  - [{i.severity}/{i.category}] {i.description} (fix: {i.suggestion})"
                 for i in r.issues
             )
             if r.issues

@@ -27,8 +27,7 @@ def optimize_report(state: ReviewState):
         f"Issues:\n"
         + (
             "\n".join(
-                f"  - [{i.severity}/{i.category}] {i.description} "
-                f"(fix: {i.suggestion})"
+                f"  - [{i.severity}/{i.category}] {i.description} (fix: {i.suggestion})"
                 for i in r.issues
             )
             if r.issues
@@ -37,11 +36,14 @@ def optimize_report(state: ReviewState):
         for r in reviews
     )
 
-    feedback_block = "\n".join(
-        f"- [{f.get('category', 'general')}] {f.get('issue', '')}: "
-        f"{f.get('reason', '')} -> {f.get('suggestion', '')}"
-        for f in feedback
-    ) or "No specific feedback items provided."
+    feedback_block = (
+        "\n".join(
+            f"- [{f.get('category', 'general')}] {f.get('issue', '')}: "
+            f"{f.get('reason', '')} -> {f.get('suggestion', '')}"
+            for f in feedback
+        )
+        or "No specific feedback items provided."
+    )
 
     weaknesses_block = "\n".join(f"- {w}" for w in weaknesses) or "None listed."
 
@@ -90,5 +92,5 @@ def optimize_report(state: ReviewState):
     print(f"Optimize attempt {state['optimize_attempts']} complete.", flush=True)
     return {
         "final_report": cast(str, response.content),
-        "optimize_attempts": state['optimize_attempts'],
+        "optimize_attempts": state["optimize_attempts"],
     }

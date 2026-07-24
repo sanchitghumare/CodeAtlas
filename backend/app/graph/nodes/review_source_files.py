@@ -1,7 +1,7 @@
-from langgraph.types import Send  #type: ignore
+from app.graph.state import FileReviewState, ReviewState
 from app.models.review import FileReview
 from app.services.llm import llm
-from app.graph.state import ReviewState, FileReviewState
+from langgraph.types import Send  # type: ignore
 
 structured_llm = llm.with_structured_output(FileReview)
 MAX_CONTENT_CHARS = 12000
@@ -76,7 +76,7 @@ def review_one_file(payload: FileReviewState):
     )
     try:
         review = structured_llm.invoke(prompt)
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         print(f"Failed to review {path}: {exc}", flush=True)
         return {"reviews": []}
 

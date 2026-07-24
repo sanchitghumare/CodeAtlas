@@ -88,7 +88,7 @@ export async function POST(req) {
 
     // Call FastAPI
     const response = await fetch(
-      `${process.env.FASTAPI_URL}/chat`,
+      `${process.env.NEXT_PUBLIC_FASTAPI_URL}/chat`,
       {
         method: "POST",
         headers: {

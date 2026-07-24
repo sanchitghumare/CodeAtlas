@@ -1,15 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api.review import router as review_router
 from app.api.chat import router as chat_router
+from app.api.review import router as review_router
 
 app = FastAPI(title="CodeAtlas API")
 app.include_router(chat_router)
 
-origins = [
-    "http://localhost:3000"
-]
+origins = ["http://localhost:3000"]
 
 app.add_middleware(
     CORSMiddleware,

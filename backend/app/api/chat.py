@@ -1,7 +1,8 @@
+from app.services.llm import llm
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from app.services.llm import llm
+
 router = APIRouter()
 
 
@@ -47,6 +48,7 @@ Instructions:
 - If the answer cannot be inferred from the analysis, clearly say so.
 - Be concise and technical.
 """
+
     async def generate_response():
         async for chunk in llm.astream(prompt):
             if chunk.content:
@@ -55,8 +57,9 @@ Instructions:
                     yield content
                 else:
                     yield "".join(
-                        item if isinstance(item, str) else str(item)
-                        for item in content
+                        item if isinstance(item, str) else str(item) for item in content
                     )
 
-    return StreamingResponse(generate_response(), media_type="text/plain; charset=utf-8")
+    return StreamingResponse(
+        generate_response(), media_type="text/plain; charset=utf-8"
+    )

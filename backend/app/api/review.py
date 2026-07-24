@@ -1,15 +1,16 @@
 import asyncio
 import json
 
-from fastapi import APIRouter, HTTPException
-from fastapi.responses import StreamingResponse
+from app.graph.graph import graph
+from app.graph.state import ReviewState
 from app.services.schemas.review import RepositoryRequest
 from app.tools.github import clone_repo
-from app.tools.scanner import scan_repository
 from app.tools.reader import read_readme
-from app.graph.state import ReviewState
+from app.tools.scanner import scan_repository
 from app.tools.tree import build_directory_tree
-from app.graph.graph import graph
+from fastapi import APIRouter, HTTPException
+from fastapi.encoders import jsonable_encoder
+from fastapi.responses import StreamingResponse
 
 router = APIRouter(prefix="/review", tags=["Review"])
 jobs: dict[str, dict] = {}
@@ -84,22 +85,27 @@ def _run_analysis(repo_url: str, job_id: str, loop: asyncio.AbstractEventLoop) -
 
         print(f"Graph finished for job {job_id}", flush=True)
         print(f"Preparing final result for job {job_id}", flush=True)
-        job["result"] = {
+        job["result"] = jsonable_encoder({
             "summary": result["summary"],
             "reviews": result["reviews"],
             "files_to_review": result["files_to_review"],
             "final_report": result["final_report"],
-        }
+        })
         print(f"Final result stored in job memory for {job_id}", flush=True)
         job["status"] = "completed"
         print(f"Sending complete event for job {job_id}", flush=True)
-        loop.call_soon_threadsafe(job["queue"].put_nowait, {"message": "Analysis complete", "complete": True})
+        loop.call_soon_threadsafe(
+            job["queue"].put_nowait, {"message": "Analysis complete", "complete": True}
+        )
         print(f"Background task finished for job {job_id}", flush=True)
-    except Exception as exc:
+    except Exception as exc: # noqa: BLE001
         job["status"] = "failed"
         job["error"] = str(exc)
         print(f"Background task failed for job {job_id}: {exc}", flush=True)
-        loop.call_soon_threadsafe(job["queue"].put_nowait, {"message": "Analysis failed", "error": str(exc), "complete": True})
+        loop.call_soon_threadsafe(
+            job["queue"].put_nowait,
+            {"message": "Analysis failed", "error": str(exc), "complete": True},
+        )
 
 
 @router.post("/analyze/start")
@@ -108,8 +114,14 @@ async def start_analysis(request: AnalysisStartRequest):
         return {"job_id": request.job_id, "status": jobs[request.job_id]["status"]}
 
     loop = asyncio.get_running_loop()
-    jobs[request.job_id] = {"queue": asyncio.Queue(), "status": "running", "result": None}
-    asyncio.create_task(asyncio.to_thread(_run_analysis, str(request.repo_url), request.job_id, loop))
+    jobs[request.job_id] = {
+        "queue": asyncio.Queue(),
+        "status": "running",
+        "result": None,
+    }
+    asyncio.create_task(
+        asyncio.to_thread(_run_analysis, str(request.repo_url), request.job_id, loop)
+    )
     return {"job_id": request.job_id, "status": "running"}
 
 
@@ -131,7 +143,11 @@ async def stream_analysis_events(job_id: str):
                 print(f"SSE stream finished for job {job_id}", flush=True)
                 break
 
-    return StreamingResponse(event_stream(), media_type="text/event-stream", headers={"Cache-Control": "no-cache"})
+    return StreamingResponse(
+        event_stream(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache"},
+    )
 
 
 @router.get("/analyze/{job_id}/result")
@@ -155,6 +171,25 @@ def analyze_repository(request: RepositoryRequest):
     scan_result = scan_repository(repo_path)
     readme_content = read_readme(repo_path)
     tree_structure = build_directory_tree(repo_path, depth=2)
-    state = ReviewState(repo_url=str(request.repo_url), repo_path=repo_path, repository=scan_result, readme={"content": readme_content}, tree=tree_structure, summary={}, files_to_review=[], source_files=[], reviews=[], cross_file_analysis={}, final_report="", evaluation={}, optimize_attempts=0)
+    state = ReviewState(
+        repo_url=str(request.repo_url),
+        repo_path=repo_path,
+        repository=scan_result,
+        readme={"content": readme_content},
+        tree=tree_structure,
+        summary={},
+        files_to_review=[],
+        source_files=[],
+        reviews=[],
+        cross_file_analysis={},
+        final_report="",
+        evaluation={},
+        optimize_attempts=0,
+    )
     result = graph.invoke(state)
-    return {"summary": result["summary"], "reviews": result["reviews"], "files_to_review": result["files_to_review"], "final_report": result["final_report"]}
+    return {
+        "summary": result["summary"],
+        "reviews": result["reviews"],
+        "files_to_review": result["files_to_review"],
+        "final_report": result["final_report"],
+    }

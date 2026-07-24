@@ -1,20 +1,29 @@
+import json
+
 from app.graph.state import ReviewState
 from app.services.llm import llm
-import json
+
+
+def _json_default(value):
+    """Serialize Pydantic structured-output objects returned by cloud models."""
+    if hasattr(value, "model_dump"):
+        return value.model_dump(mode="json")
+    raise TypeError(f"Object of type{ {}}type(value).__name__}} is not JSNserializable")
+
 
 # structured_llm = llm.with_structured_output(ReviewState)
 def cross_file_analysis(state: ReviewState):
     summary = state["summary"]
-    tree =  json.dumps(state["tree"], indent=2)
-    reviews = json.dumps(state["reviews"], indent=2)
+    tree = json.dumps(state["tree"], indent=2)
+    reviews = json.dumps(state["reviews"], indent=2, default=_json_default)
 
-    prompt=f"""
+    prompt = f"""
            You are CodeAtlas's Cross-File Analysis Agent, acting as a Staff Software Engineer conducting a repository-wide architectural review.
 
             ## Context
-            summary: {summary}
-            tree: {tree}
-            reviews: {reviews}
+            summary:{summary}
+            tree:{tree}
+            reviews:{reviews}
             You have already received:
             1. A high-level repository summary.
             2. The repository tree.
@@ -85,15 +94,15 @@ def cross_file_analysis(state: ReviewState):
             Return ONLY valid JSON.
             Example structure:
             
-            {
-            "repository_health": {
-                "score": <0-100>,
+           {{
+        "repository_health":{{
+            "score": <0-100>,
                 "summary": "<overall architectural assessment>"
-            },
+            }},
 
             "cross_file_findings": [
-                {
-                "title": "...",
+               {{
+            "title": "...",
                 "severity": "Critical | High | Medium | Low",
                 "confidence":0.0-1.0,
 
@@ -109,7 +118,7 @@ def cross_file_analysis(state: ReviewState):
                 "recommendation": "...",
 
                 "impact": "..."
-                }
+                }}
             ],
 
             "quick_wins": [
@@ -126,7 +135,7 @@ def cross_file_analysis(state: ReviewState):
                 "...",
                 "..."
             ]
-            }
+            }}
              
             ---
 
@@ -145,8 +154,5 @@ def cross_file_analysis(state: ReviewState):
             Remember:
 
             You are performing an architectural synthesis, NOT another code review."""
-    response=llm.invoke(prompt)
-    return{
-      "cross_file_analysis": json.loads(str(response.content))
-    }
-
+    response = llm.invoke(prompt)
+    return{"cross_file_analysis": json.loads(str(response.content))}
