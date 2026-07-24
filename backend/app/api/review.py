@@ -18,14 +18,17 @@ from app.tools.tree import build_directory_tree
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, HttpUrl
 
 router = APIRouter(prefix="/review", tags=["Review"])
 jobs: dict[str, dict] = {}
 TERMINAL_STATUSES = {"completed", "failed"}
 
 
-class AnalysisStartRequest(RepositoryRequest):
+class AnalysisStartRequest(BaseModel):
+    repo_url: HttpUrl
     job_id: UUID
+    github_access_token: str | None = None
 
 
 class AnalysisCancelled(RuntimeError):
@@ -83,7 +86,7 @@ def _run_analysis(repo_url: str, job_id: str) -> None:
         print(f"Background task started for job {job_id}", flush=True)
         job["stage"] = "clone"
         _queue_event(job, {"message": "Cloning repository"})
-        clone_result = clone_repo(repo_url, job_id)
+        clone_result = clone_repo(repo_url, job_id,token=job.get("github_access_token"))
         repo_path = clone_result["local_path"]
         job["repo_path"] = repo_path
         _raise_if_cancelled(job)
@@ -173,7 +176,7 @@ def cleanup_expired_jobs() -> None:
         jobs.pop(job_id, None)
 
 
-def _create_job(repo_url: str, job_id: str, loop: asyncio.AbstractEventLoop) -> dict:
+def _create_job(repo_url: str, job_id: str, loop: asyncio.AbstractEventLoop, github_access_token: str | None = None) -> dict:
     job = {
         "queue": asyncio.Queue(),
         "loop": loop,
@@ -186,6 +189,7 @@ def _create_job(repo_url: str, job_id: str, loop: asyncio.AbstractEventLoop) -> 
         "started_at": time.monotonic(),
         "finished_at": None,
         "complete_event_sent": False,
+        "github_access_token": github_access_token,
     }
     jobs[job_id] = job
     return job
@@ -201,7 +205,7 @@ async def start_analysis( request: Request,
         return {"job_id": body.job_id, "status": job["status"]}
 
     loop = asyncio.get_running_loop()
-    job = _create_job(str(body.repo_url), str(body.job_id), loop)
+    job = _create_job(str(body.repo_url), str(body.job_id), loop, github_access_token=body.github_access_token)
     task = asyncio.create_task(_run_with_timeout(str(body.repo_url), str(body.job_id)))
     job["task"] = task
     return {"job_id": body.job_id, "status": "running"}

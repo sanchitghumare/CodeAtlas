@@ -41,9 +41,22 @@ def _run_git(arguments: list[str], timeout: int) -> None:
         raise CloneError(f"Unable to run git: {exc}") from exc
 
 
-def clone_repo(repo_url: str, job_id: str) -> dict:
+
+
+def authenticated_repo_url(repo_url: str, token: str | None) -> str:
+    if not token:
+        return repo_url
+
+    parsed = urlparse(repo_url)
+
+    return (
+        f"https://x-access-token:{token}@"
+        f"{parsed.netloc}{parsed.path}"
+    )
+def clone_repo(repo_url: str, job_id: str,token: str | None) -> dict:
     """Clone a job-scoped shallow copy with an explicit network deadline."""
-    parsed_url = urlparse(repo_url)
+    authenticated_url = authenticated_repo_url(repo_url,token)
+    parsed_url = urlparse(authenticated_url)
     parts = [part for part in parsed_url.path.split("/") if part]
     if len(parts) < 2:
         raise CloneError("The repository URL is invalid.")

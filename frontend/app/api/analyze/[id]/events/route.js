@@ -21,7 +21,11 @@ export async function GET(_request, { params }) {
   const analysis = await Analysis.findOne({ jobId, user: user?._id, status: "In Progress" });
   if (!analysis) return NextResponse.json({ error: "Analysis not found" }, { status: 404 });
 
-  const upstream = await fetch(`${process.env.NEXT_PUBLIC_FASTAPI_URL}/review/analyze/${jobId}/events`, { cache: "no-store" });
+  const upstream = await fetch(`${process.env.NEXT_PUBLIC_FASTAPI_URL}/review/analyze/${jobId}/events`, {
+    cache: "no-store", headers: {
+      "X-Internal-Token": process.env.INTERNAL_API_TOKEN,
+    },
+  });
   if (!upstream.ok || !upstream.body) {
     analysis.status = "Failed";
     analysis.error = analysisErrorMessage({ error: "Progress stream unavailable" });
@@ -30,13 +34,11 @@ export async function GET(_request, { params }) {
     return NextResponse.json({ error: analysis.error }, { status: upstream.status || 502 });
   }
   console.log(`Upstream SSE connection opened for job ${jobId}`);
-
   return new Response(upstream.body, {
     headers: {
       "Content-Type": "text/event-stream",
       "Cache-Control": "no-cache, no-transform",
       Connection: "keep-alive",
-       "X-Internal-Token": process.env.INTERNAL_API_TOKEN,
     },
   });
 }

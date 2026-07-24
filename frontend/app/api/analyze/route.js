@@ -104,6 +104,7 @@ export async function POST(req) {
                 body: JSON.stringify({
                     repo_url,
                     job_id: jobId,
+                    github_access_token: user.githubAccessToken,
                 }),
             }
         );
