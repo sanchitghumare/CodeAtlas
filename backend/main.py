@@ -28,7 +28,7 @@ async def lifespan(_: FastAPI):
         await asyncio.gather(cleanup_task, return_exceptions=True)
 
 
-app = FastAPI(title="ReviewForge API", lifespan=lifespan)
+app = FastAPI(title="CodeAtlas API", lifespan=lifespan)
 app.include_router(chat_router)
 app.include_router(review_router)
 from app.core.limiter import limiter
