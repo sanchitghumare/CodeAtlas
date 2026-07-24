@@ -82,7 +82,13 @@ function LiveActivity({ jobId, repository, onComplete }) {
       console.log(`Received complete SSE event for job ${jobId}`);
       stream.close();
       if (data.error) {
-        setError(data.error);
+        try {
+          const response = await fetch(`/api/analyze/${jobId}/complete`, { method: "POST" });
+          const payload = await response.json().catch(() => ({}));
+          setError(payload.error || data.error);
+        } catch {
+          setError(data.error);
+        }
         return;
       }
       try {
@@ -153,6 +159,9 @@ export default function AnalysisPage() {
   });
   if (hasActiveJob) {
     return <LiveActivity jobId={jobId} repository={analysis.repository || "repository"} onComplete={setAnalysis} />;
+  }
+  if (analysis.status === "Failed") {
+    return <div className="mx-auto max-w-3xl px-6 py-24 text-center"><p className="text-lg font-medium text-white">Analysis failed</p><p className="mt-2 text-zinc-400">{analysis.error || "The analysis could not be completed. Please try again."}</p><Link href="/dashboard" className="mt-6 inline-flex text-sm text-indigo-300 hover:text-indigo-200">Return to dashboard</Link></div>;
   }
   if (analysis.status === "In Progress" || !analysis.response) {
     return <div className="mx-auto max-w-3xl px-6 py-24 text-center text-zinc-400">This analysis is still processing. Return to the dashboard and open the active review from the current session.</div>;

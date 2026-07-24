@@ -1,6 +1,6 @@
 from app.graph.context import clip, compact_tree
 from app.graph.state import ReviewState
-from app.services.llm import llm
+from app.services.llm import invoke_llm, llm
 from pydantic import BaseModel
 
 
@@ -32,6 +32,6 @@ README (may be absent):
 
 Repository paths:
 {compact_tree(state["tree"])}"""
-    response = structured_llm.invoke(prompt)
+    response = invoke_llm(structured_llm, prompt)
     summary = response.model_dump() if isinstance(response, BaseModel) else response
     return {"summary": summary}

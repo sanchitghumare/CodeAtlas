@@ -3,7 +3,7 @@ import logging
 
 from app.graph.context import compact_reviews, compact_tree
 from app.graph.state import ReviewState
-from app.services.llm import llm
+from app.services.llm import invoke_llm, llm
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ File-review evidence:
 
 Return JSON only:
 {{"repository_health":{{"score":0,"summary":""}},"cross_file_findings":[{{"title":"","severity":"","files":[""],"description":"","evidence":"","recommendation":"","impact":""}}],"quick_wins":[],"long_term_refactors":[],"strengths":[]}}"""
-    response = llm.invoke(prompt)
+    response = invoke_llm(llm, prompt)
     content = str(response.content).strip()
     if content.startswith("```"):
         lines = content.splitlines()[1:]

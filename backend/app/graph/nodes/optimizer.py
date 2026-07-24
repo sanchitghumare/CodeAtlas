@@ -1,7 +1,7 @@
 from app.graph.context import compact_json, compact_reviews
 from app.graph.nodes.synthesize_report import _coerce_text_content
 from app.graph.state import ReviewState
-from app.services.llm import llm
+from app.services.llm import invoke_llm, llm
 
 
 def optimize_report(state: ReviewState):
@@ -22,7 +22,7 @@ Current report:
 {state["final_report"]}"""
 
     print("Optimizing report based on evaluator feedback...", flush=True)
-    final_report = _coerce_text_content(llm.invoke(prompt).content)
+    final_report = _coerce_text_content(invoke_llm(llm, prompt).content)
     attempts = state.get("optimize_attempts", 0) + 1
     print(f"Optimize attempt {attempts} complete.", flush=True)
     return {"final_report": final_report, "optimize_attempts": attempts}

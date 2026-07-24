@@ -34,6 +34,21 @@ const AnalysisSchema = new mongoose.Schema(
       enum: ["In Progress", "Completed", "Failed"],
       default: "In Progress",
     },
+
+    startedAt: {
+      type: Date,
+      default: Date.now,
+    },
+
+    completedAt: {
+      type: Date,
+      default: null,
+    },
+
+    error: {
+      type: String,
+      default: null,
+    },
   },
   {
     timestamps: true,

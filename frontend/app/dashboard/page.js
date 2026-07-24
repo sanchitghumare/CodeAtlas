@@ -215,12 +215,6 @@ border-b border-zinc-900">
           )}
         </section>
 
-        {/* Quick Stats */}
-        {/* <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {stats.map((s) => (
-            <StatCard key={s.label} {...s} />
-          ))}
-        </section> */}
 
         {/* GitHub Repositories */}
         <section id="repositories" className="mt-12 scroll-mt-20">

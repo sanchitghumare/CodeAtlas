@@ -37,7 +37,7 @@ function TerminalPreview() {
         <p className="text-[#8B949E]">
           The endpoint updates user resources without
           verifying ownership. Any authenticated user
-          could modify another user's data.
+          could modify another user&apos;s data.
         </p>
 
         <div className="rounded-md border border-[#30363D] bg-[#0D1117] p-3">

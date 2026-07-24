@@ -1,25 +1,58 @@
+import shutil
+import subprocess
 import tempfile
 from pathlib import Path
 from urllib.parse import urlparse
 
-from git import Repo
+from app.services.config import CLONE_TIMEOUT
 
-TEMP_DIR = Path(tempfile.gettempdir()) / "CodeAtlas"
+TEMP_DIR = Path(tempfile.gettempdir()) / "ReviewForge"
 
 
-def clone_repo(repo_url: str) -> dict:
-    """
-    Clone a GitHub repository into backend/temp
-    """
+class CloneError(RuntimeError):
+    pass
+
+
+class CloneTimeoutError(CloneError):
+    pass
+
+
+def cleanup_repo(repo_path: str | Path | None) -> None:
+    if repo_path:
+        shutil.rmtree(repo_path, ignore_errors=True)
+
+
+def _run_git(arguments: list[str], timeout: int) -> None:
+    try:
+        subprocess.run(
+            ["git", *arguments],
+            check=True,
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired as exc:
+        raise CloneTimeoutError("Repository clone timed out. Please try again.") from exc
+    except (OSError, subprocess.CalledProcessError) as exc:
+        raise CloneError("Unable to clone the repository. Check the URL and network access.") from exc
+
+
+def clone_repo(repo_url: str, job_id: str) -> dict:
+    """Clone a job-scoped shallow copy with an explicit network deadline."""
     parsed_url = urlparse(repo_url)
-    repo_name = parsed_url.path.lstrip("/").split("/")[-1]
-    destination = TEMP_DIR / repo_name
-    print(f"Cloning {repo_name}...")
-    if destination.exists():
-        repo = Repo(destination)
-        repo.remotes.origin.pull()
-    else:
-        Repo.clone_from(repo_url, destination)
+    parts = [part for part in parsed_url.path.split("/") if part]
+    if len(parts) < 2:
+        raise CloneError("The repository URL is invalid.")
 
-    print("Clone completed.")
+    repo_name = parts[-1].removesuffix(".git")
+    destination = TEMP_DIR / job_id
+    cleanup_repo(destination)
+    TEMP_DIR.mkdir(parents=True, exist_ok=True)
+    print(f"Cloning {repo_name}...", flush=True)
+    try:
+        _run_git(["clone", "--depth", "1", repo_url, str(destination)], CLONE_TIMEOUT)
+    except CloneError:
+        cleanup_repo(destination)
+        raise
+    print("Clone completed.", flush=True)
     return {"repo_name": repo_name, "local_path": str(destination)}

@@ -4,6 +4,7 @@ import User from "@/models/user";
 import Analysis from "@/models/analysis";
 import ConnectDb from "@/lib/mongodb";
 import { NextResponse } from "next/server";
+import { analysisErrorMessage, recoverStaleAnalyses } from "@/lib/analysis-lifecycle";
 
 export const runtime = "nodejs";
 
@@ -13,14 +14,21 @@ export async function GET(_request, { params }) {
   if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   await ConnectDb();
+  await recoverStaleAnalyses();
   const user = await User.findOne({ email: session.user.email }).select("_id");
   const { id: jobId } = await params;
   console.log(`Opening upstream SSE connection for job ${jobId}`);
-  const analysis = await Analysis.findOne({ jobId, user: user?._id, status: "In Progress" }).select("_id status");
+  const analysis = await Analysis.findOne({ jobId, user: user?._id, status: "In Progress" });
   if (!analysis) return NextResponse.json({ error: "Analysis not found" }, { status: 404 });
 
   const upstream = await fetch(`${process.env.NEXT_PUBLIC_FASTAPI_URL}/review/analyze/${jobId}/events`, { cache: "no-store" });
-  if (!upstream.ok || !upstream.body) return NextResponse.json({ error: "Progress stream unavailable" }, { status: upstream.status });
+  if (!upstream.ok || !upstream.body) {
+    analysis.status = "Failed";
+    analysis.error = analysisErrorMessage({ error: "Progress stream unavailable" });
+    analysis.completedAt = new Date();
+    await analysis.save();
+    return NextResponse.json({ error: analysis.error }, { status: upstream.status || 502 });
+  }
   console.log(`Upstream SSE connection opened for job ${jobId}`);
 
   return new Response(upstream.body, {

@@ -36,7 +36,7 @@ export const authOptions = {
             },
             {
               upsert: true,
-              new: true,
+              returnDocument: "after",
             }
           );
         }

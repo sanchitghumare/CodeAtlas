@@ -5,6 +5,7 @@ import ConnectDb from "@/lib/mongodb";
 import User from "@/models/user";
 import Analysis from "@/models/analysis";
 import { randomUUID } from "crypto";
+import { recoverStaleAnalyses } from "@/lib/analysis-lifecycle";
 
 export async function GET() {
     try {
@@ -15,6 +16,7 @@ export async function GET() {
         }
 
         await ConnectDb();
+        await recoverStaleAnalyses();
         const user = await User.findOne({ email: session.user.email }).select("_id");
 
         if (!user) {
@@ -62,6 +64,7 @@ export async function POST(req) {
             );
         }
         await ConnectDb();
+        await recoverStaleAnalyses();
         const user = await User.findOne({
             email: session.user.email,
         });
@@ -105,7 +108,7 @@ export async function POST(req) {
         );
 
         if (!fastApiResponse.ok) {
-            await Analysis.findByIdAndUpdate(analysis._id, { status: "Failed" });
+            await Analysis.findByIdAndUpdate(analysis._id, { status: "Failed", error: "Unable to start the analysis service.", completedAt: new Date() });
             const payload = await fastApiResponse.text();
             return NextResponse.json(
                 { error: payload },
@@ -119,7 +122,7 @@ export async function POST(req) {
     } catch (err) {
         console.error(err);
         if (analysis?._id) {
-            await Analysis.findByIdAndUpdate(analysis._id, { status: "Failed" });
+            await Analysis.findByIdAndUpdate(analysis._id, { status: "Failed", error: "Unable to start the analysis service.", completedAt: new Date() });
         }
 
         return NextResponse.json(

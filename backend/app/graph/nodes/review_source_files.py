@@ -1,6 +1,6 @@
 from app.graph.state import FileReviewState, ReviewState
 from app.models.review import FileReview
-from app.services.llm import llm
+from app.services.llm import LLMInvocationError, LLMTimeoutError, invoke_llm, llm
 from langgraph.types import Send  # type: ignore
 
 structured_llm = llm.with_structured_output(FileReview)
@@ -39,10 +39,12 @@ def review_one_file(payload: FileReviewState):
     content = payload["content"]
     print(f"Reviewing {path}... ({len(content)} chars)", flush=True)
     try:
-        review = structured_llm.invoke(build_prompt(path, content))
+        review = invoke_llm(structured_llm, build_prompt(path, content))
+    except (LLMTimeoutError, LLMInvocationError):
+        raise
     except Exception as exc:  # noqa: BLE001
         print(f"Failed to review {path}: {exc}", flush=True)
-        return {"reviews": []}
+        raise RuntimeError(f"AI review failed for {path}.") from exc
 
     print(f"Finished {path}", flush=True)
     return {"reviews": [review]}

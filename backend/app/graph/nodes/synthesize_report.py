@@ -1,6 +1,6 @@
 from app.graph.context import compact_json, compact_reviews
 from app.graph.state import ReviewState
-from app.services.llm import llm
+from app.services.llm import invoke_llm, llm
 
 
 def build_prompt(state: ReviewState) -> str:
@@ -53,7 +53,7 @@ def synthesize_report(state: ReviewState):
 
     print("Synthesizing final report...", flush=True)
     prompt = build_prompt(state)
-    response = llm.invoke(prompt)
+    response = invoke_llm(llm, prompt)
     state["final_report"] = _coerce_text_content(response.content)
     print("Report ready.", flush=True)
     return {"final_report": _coerce_text_content(response.content)}

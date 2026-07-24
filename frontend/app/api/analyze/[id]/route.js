@@ -4,9 +4,11 @@ import User from "@/models/user";
 import Analysis from "@/models/analysis";
 import ConnectDb from "@/lib/mongodb";
 import { NextResponse } from "next/server";
+import { recoverStaleAnalyses } from "@/lib/analysis-lifecycle";
 
 export async function GET(req, { params }) {
   await ConnectDb();
+  await recoverStaleAnalyses();
 
   const session = await getServerSession(authOptions);
 
