@@ -1,11 +1,10 @@
+from app.core.auth import verify_internal_token
 from app.core.limiter import limiter
 from app.graph.context import clip, compact_json, compact_reviews
 from app.services.llm import llm
 from fastapi import APIRouter, Depends
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-
-from backend.app.core.auth import verify_internal_token
 
 router = APIRouter()
 
