@@ -119,9 +119,10 @@ async def start_analysis(request: AnalysisStartRequest):
         "status": "running",
         "result": None,
     }
-    asyncio.create_task(
-        asyncio.to_thread(_run_analysis, str(request.repo_url), request.job_id, loop)
-    )
+    background_tasks: set[asyncio.Task] = set()
+    task = asyncio.create_task(asyncio.to_thread(_run_analysis, str(request.repo_url), request.job_id, loop))
+    background_tasks.add(task)
+    task.add_done_callback(background_tasks.discard)
     return {"job_id": request.job_id, "status": "running"}
 
 

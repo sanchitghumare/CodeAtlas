@@ -1,3 +1,4 @@
+from app.graph.context import compact_json, compact_reviews
 from app.graph.state import ReviewState
 from app.services.llm import llm
 
@@ -6,43 +7,19 @@ def build_prompt(state: ReviewState) -> str:
     summary = state["summary"]
     reviews = state["reviews"]
     cross_file_analysis = state["cross_file_analysis"]
-    reviews_block = "\n\n".join(
-        f"File: {r.path}\n"
-        f"Score: {r.score}/100\n"
-        f"Strengths: {', '.join(r.strengths) if r.strengths else 'none noted'}\n"
-        f"Issues:\n"
-        + (
-            "\n".join(
-                f"  - [{i.severity}/{i.category}] {i.description} (fix: {i.suggestion})"
-                for i in r.issues
-            )
-            if r.issues
-            else "  none"
-        )
-        for r in reviews
-    )
+    reviews_block = compact_reviews(reviews, include_strengths=False)
 
-    return f"""You are a senior software engineer writing a final code review
-        report for a pull request / repository audit.
+    return f"""Write a concise repository review from the evidence below.
+Include: overall health (2-3 sentences), recurring risks, and 3-5 prioritized
+recommendations. Do not invent findings or re-review source code. Plain text.
 
-        Project type: {summary.get("project_type", "unknown")}
-        Purpose: {summary.get("purpose", "unknown")}
-        Architecture: {summary.get("architecture", "unknown")}
+Repository: type={summary.get("project_type", "unknown")}; purpose={summary.get("purpose", "unknown")}; architecture={summary.get("architecture", "unknown")}
 
-        Below are the per-file reviews already produced. Do not re-review the
-        code. Synthesize these findings into a short report with:
+File evidence:
+{reviews_block}
 
-        1. An overall health assessment (2-3 sentences)
-        2. The most important recurring issues across files, if any
-        3. A prioritized list of the top 3-5 recommendations
-
-        Keep it concise and actionable. Plain text, no markdown headers.
-
-        Per-file reviews:
-        {reviews_block}
-         
-        The cross-file analysis is as follows:
-        {cross_file_analysis}"""
+Cross-file evidence:
+{compact_json(cross_file_analysis, 2200)}"""
 
 
 def _coerce_text_content(content: object) -> str:

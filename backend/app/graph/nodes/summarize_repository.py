@@ -1,6 +1,6 @@
+from app.graph.context import clip, compact_tree
 from app.graph.state import ReviewState
 from app.services.llm import llm
-from langchain_core.messages import HumanMessage
 from pydantic import BaseModel
 
 
@@ -8,11 +8,8 @@ class RepositorySummary(BaseModel):
     project_type: str
     purpose: str
     architecture: str
-    technologies: list[str]
     frameworks: list[str]
     languages: list[str]
-    review_targets: list[str]
-    entry_points: list[str]
     confidence: float
 
 
@@ -20,68 +17,21 @@ structured_llm = llm.with_structured_output(RepositorySummary)
 
 
 def summarize_repository(state: ReviewState):
-
     metadata = state["repository"]
-    readme = state["readme"]["content"]
-    tree = state["tree"]
-    prompt = f"""
-        You are a senior software engineer.
+    prompt = f"""Summarize this repository for a code-review system. Infer only
+what the evidence supports: project type, purpose, architecture, languages,
+frameworks, and confidence.
 
-        Repository Metadata:
+Metadata: languages={metadata["languages"]}; frameworks={metadata["frameworks"]};
+important_files={metadata["important_files"][:20]};
+entry_points={metadata["entry_points"][:10]}; files={metadata["total_files"]};
+directories={metadata["total_directories"]}
 
-        Languages:
-        {metadata["languages"]}
+README (may be absent):
+{clip(state["readme"]["content"], 1500)}
 
-        Frameworks:
-        {metadata["frameworks"]}
-
-        Important Files:
-        {metadata["important_files"]}
-        Entry Points:
-        {metadata["entry_points"]}
-        Total Files:
-        {metadata["total_files"]}
-        Total Directories:
-        {metadata["total_directories"]}
-
-        README:
-
-        {readme}
-
-        Directory Tree:
-
-        {tree}
-
-        Summarize this repository.
-
-       Return ONLY a valid JSON object.
-
-        Rules:
-        - Do NOT write any explanation.
-        - Do NOT write "Here's the JSON".
-        - Do NOT use markdown.
-        - Do NOT use ```json.
-        - Do NOT write anything before or after the JSON.
-
-        The response must start with '{" and end with "}'.
-
-        Return exactly this schema:
-
-         {{
-            "project_type": "",
-            "purpose": "",
-            "architecture": "",
-            "technologies": [],
-            "frameworks": [],
-            "languages": [],
-            "review_targets": [],
-            "entry_points": [],
-            "confidence": 0.0
-        }}
-        """
-    response = structured_llm.invoke([HumanMessage(content=prompt)])
-    if isinstance(response, BaseModel):
-        state["summary"] = response.model_dump()
-    else:
-        state["summary"] = response
-    return state["summary"]
+Repository paths:
+{compact_tree(state["tree"])}"""
+    response = structured_llm.invoke(prompt)
+    summary = response.model_dump() if isinstance(response, BaseModel) else response
+    return {"summary": summary}

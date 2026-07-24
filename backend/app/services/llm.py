@@ -14,5 +14,7 @@ llm = ChatGroq(
     api_key=SecretStr(groq_api_key),
     model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
     temperature=0.4,
-    max_tokens=1024,
+    # All graph outputs are deliberately concise; this avoids runaway output
+    # while leaving enough room for the final repository report.
+    max_tokens=700,
 )

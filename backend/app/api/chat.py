@@ -1,3 +1,4 @@
+from app.graph.context import clip, compact_json, compact_reviews
 from app.services.llm import llm
 from fastapi import APIRouter
 from fastapi.responses import StreamingResponse
@@ -17,37 +18,21 @@ async def chat(request: ChatRequest):
     analysis = request.analysis
     history = request.history
     question = request.question
-    analysis_context = f"""
-         Repository: {analysis.get("repository_summary")}
+    recent_history = [
+        {"role": item.get("role"), "content": clip(item.get("content"), 700)}
+        for item in history[-6:]
+        if isinstance(item, dict)
+    ]
+    prompt = f"""You are ReviewForge AI. Answer the question using only this repository analysis. If the
+answer is not supported, say so. Be concise and technical.
 
-            Summary:
-            {analysis.get("summary")}
-
-            File Reviews:
-            {analysis.get("reviews")}
-
-            Final Report:
-            {analysis.get("final_report")}
-            """
-    prompt = f"""
-You are CodeAtlas AI.
-
-You previously analyzed a GitHub repository.
-
-Repository Analysis:
-{analysis_context}
-
-Conversation History:
-{history}
-
-User Question:
-{question}
-
-Instructions:
-- Answer ONLY using the repository analysis.
-- If the answer cannot be inferred from the analysis, clearly say so.
-- Be concise and technical.
-"""
+Summary: {compact_json(analysis.get("summary", {}), 900)}
+Final report: {clip(analysis.get("final_report"), 2400)}
+Findings:
+{compact_reviews(analysis.get("reviews", []), include_strengths=False, max_issues_per_file=2)}
+Cross-file: {compact_json(analysis.get("cross_file_analysis", {}), 1200)}
+History: {compact_json(recent_history, 1800)}
+Question: {clip(question, 1000)}"""
 
     async def generate_response():
         async for chunk in llm.astream(prompt):

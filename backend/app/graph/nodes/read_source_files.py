@@ -1,6 +1,6 @@
 from pathlib import Path
 
-MAX_CHARS = 5000
+MAX_CHARS = 3500
 
 
 def read_source_files(state):
@@ -17,7 +17,16 @@ def read_source_files(state):
                 content = f.read()
 
                 if len(content) > MAX_CHARS:
-                    content = content[:MAX_CHARS]
+                    # Preserve imports/configuration at the start and exported
+                    # handlers at the end instead of spending the full budget
+                    # on an arbitrary prefix.
+                    head_size = 2700
+                    tail_size = 700
+                    content = (
+                        f"{content[:head_size]}\n\n"
+                        "# … middle of file omitted for review budget …\n\n"
+                        f"{content[-tail_size:]}"
+                    )
 
                 source_files.append({"path": relative_path, "content": content})
 
