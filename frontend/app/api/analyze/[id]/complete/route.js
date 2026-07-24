@@ -30,7 +30,7 @@ export async function POST(_request, { params }) {
   if (analysis.status === "Failed") return NextResponse.json({ error: analysis.error || "Analysis failed." }, { status: 500 });
 
   try {
-    const result = await fetch(`${process.env.NEXT_PUBLIC_FASTAPI_URL}/review/analyze/${jobId}/result`, { cache: "no-store" });
+    const result = await fetch(`${process.env.NEXT_PUBLIC_FASTAPI_URL}/review/analyze/${jobId}/result`, { cache: "no-store", headers: { "X-Internal-Token": process.env.INTERNAL_API_TOKEN } });
     if (!result.ok) {
       const payload = await result.json().catch(() => ({}));
       return failAnalysis(analysis, payload);
