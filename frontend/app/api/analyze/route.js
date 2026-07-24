@@ -99,7 +99,7 @@ export async function POST(req) {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                     "X-Internal-Token": process.env.INTERNAL_API_TOKEN,
+                    "X-Internal-Token": process.env.INTERNAL_API_TOKEN,
                 },
                 body: JSON.stringify({
                     repo_url,
@@ -107,7 +107,6 @@ export async function POST(req) {
                 }),
             }
         );
-
         if (!fastApiResponse.ok) {
             await Analysis.findByIdAndUpdate(analysis._id, { status: "Failed", error: "Unable to start the analysis service.", completedAt: new Date() });
             const payload = await fastApiResponse.text();

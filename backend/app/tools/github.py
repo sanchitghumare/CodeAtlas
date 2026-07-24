@@ -33,8 +33,12 @@ def _run_git(arguments: list[str], timeout: int) -> None:
         )
     except subprocess.TimeoutExpired as exc:
         raise CloneTimeoutError("Repository clone timed out. Please try again.") from exc
-    except (OSError, subprocess.CalledProcessError) as exc:
-        raise CloneError("Unable to clone the repository. Check the URL and network access.") from exc
+    except subprocess.CalledProcessError as exc:
+        print(f"git failed (exit {exc.returncode}): {exc.stderr}", flush=True)
+        raise CloneError(f"Unable to clone the repository: {exc.stderr.strip()}") from exc
+    except OSError as exc:
+        print(f"git could not be executed: {exc}", flush=True)
+        raise CloneError(f"Unable to run git: {exc}") from exc
 
 
 def clone_repo(repo_url: str, job_id: str) -> dict:
