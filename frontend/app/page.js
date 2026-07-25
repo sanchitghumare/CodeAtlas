@@ -84,10 +84,10 @@ export default function Home() {
       });
       const contentType = res.headers.get("content-type") ?? "";
       const payload = contentType.includes("application/json") ? await res.json() : await res.text();
-      if (!res.ok) throw new Error(typeof payload === "string" ? payload : JSON.stringify(payload));
-
-      sessionStorage.setItem("CodeAtlas-analysis", JSON.stringify({ repository: trimmedRepository, response: payload }));
-      router.push("/dashboard");
+      if (!res.ok) {
+        throw new Error(typeof payload === "string" ? payload : payload.error || "Request failed");
+      }
+      router.push(`/analysis/${payload.analysisId}?jobId=${encodeURIComponent(payload.jobId)}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Request failed");
     } finally {
@@ -105,7 +105,7 @@ export default function Home() {
           </Link>
           <Link href="/login" className="text-sm text-[#8B949E] transition-colors hover:text-[#F0F6FC]">Sign in</Link>
         </header>
-
+ 
         <section className="grid gap-12 py-18 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:gap-16 lg:py-28">
           <div className="max-w-2xl">
             <p className="text-sm font-medium text-[#3B82F6]">Code review for the codebase, not just the diff.</p>
@@ -119,14 +119,14 @@ export default function Home() {
           </div>
           <TerminalPreview />
         </section>
-
+ 
         <section className="border-y border-[#30363D] py-16 sm:py-20">
           <div className="max-w-xl"><p className="text-sm font-medium text-[#3B82F6]">How it works</p><h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em]">A review with a clear path to action.</h2></div>
           <div className="mt-12 grid gap-8 md:grid-cols-3 md:gap-12">
             {[['01', 'Connect repository', 'Paste a GitHub repository URL and start an analysis.'], ['02', 'Analyze the codebase', 'CodeAtlas maps files, dependencies, and repository-level patterns.'], ['03', 'Use the report', 'Review prioritized findings, inspect the evidence, and decide what to fix.']].map(([number, title, description]) => <div key={number} className="border-t border-[#30363D] pt-5"><p className="font-mono text-xs text-[#3B82F6]">{number}</p><h3 className="mt-5 text-base font-medium">{title}</h3><p className="mt-2 text-sm leading-6 text-[#8B949E]">{description}</p></div>)}
           </div>
         </section>
-
+ 
         <section className="py-20 sm:py-28">
           <div className="grid gap-12 lg:grid-cols-[0.7fr_1.3fr] lg:gap-20">
             <div><p className="text-sm font-medium text-[#3B82F6]">What it looks for</p><h2 className="mt-3 text-3xl font-semibold tracking-[-0.03em]">Useful feedback starts with context.</h2><p className="mt-5 text-base leading-7 text-[#8B949E]">A good review should explain what changed, why it matters, and where the risk travels next.</p></div>

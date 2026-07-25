@@ -12,13 +12,13 @@ export default function RepoCard({ repo, onAnalyze, analyzing }) {
     const dot = LANGUAGE_COLORS[repo.language] || LANGUAGE_COLORS.default;
 
     return (
-        <div className="group flex flex-col justify-between rounded-xl border border-white/10 bg-[#111216] p-5 transition-all hover:border-zinc-700
-          hover:transition-colors">
+        <div className="group flex flex-col justify-between rounded-xl border border-white/10 bg-[#111216] p-6  hover:border-zinc-600
+        hover:-translate-y-1 hover:shadow-lg transition-all duration-300">
             <div>
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                         <div className="flex items-center gap-2">
-                            <p className="truncate font-medium text-zinc-100">
+                            <p className="truncate font-semibold text-base text-zinc-100">
                                 {repo.name}
                             </p>
                             <span
@@ -76,12 +76,13 @@ export default function RepoCard({ repo, onAnalyze, analyzing }) {
                 {analyzing ? (
                     <>
                         <Loader2 className="size-3.5 animate-spin" />
-                        Analyzing...
+                        Reviewing...
+
                     </>
                 ) : (
                     <>
-                        <Sparkles className="size-3.5" />
-                        Analyze Repository
+
+                        Analyze →
                     </>
                 )}
             </button>

@@ -178,7 +178,7 @@ export default function AnalysisPage() {
       <header className="sticky top-0 z-30 border-b border-white/10 bg-[#09090b]/85 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
           <Link href="/dashboard" className="inline-flex items-center gap-2 text-sm text-zinc-400 transition hover:text-white"><ArrowLeft className="size-4" /> Dashboard</Link>
-          <div className="hidden items-center gap-1 sm:flex"><span className="rounded-md bg-indigo-500/10 px-2 py-1 text-xs font-medium text-indigo-300">AI review</span><span className="text-xs text-zinc-600">#{String(id).slice(-6)}</span></div>
+  
         </div>
       </header>
 

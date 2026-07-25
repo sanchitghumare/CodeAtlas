@@ -76,7 +76,7 @@ export default function Home() {
     fetchRecentReviews();
   }, []);
   const session = useSession();
-  const user = session?.data?.user?.username || null;
+  const user = session?.data?.user?.name || null;
   const avatarUrl = session?.data?.user?.image || null;
 
   const visibleRepos = showAllRepos ? repositories : repositories.slice(0, 3);
@@ -192,7 +192,7 @@ border-b border-zinc-900">
             )}
             <div>
               <h1 className="text-2xl font-semibold tracking-tight text-white">
-                Welcome back{user ? `, ${user}` : ""}
+                Welcome back {user ? `, ${user.split(" ")[0]}` : ""}
               </h1>
               <p className="mt-1 text-sm text-zinc-400">
                 Review your repositories using
@@ -203,7 +203,6 @@ border-b border-zinc-900">
 
           {!showInput ? (
             <Button onClick={() => setShowInput(true)} className="inline-flex items-center gap-2 rounded-lg bg-blue-500 px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-blue-400">
-              <Sparkles className="size-4" />
               Analyze New Repository
             </Button>
           ) : (

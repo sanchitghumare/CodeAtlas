@@ -18,13 +18,17 @@ async function failAnalysis(analysis, payload) {
 
 export async function POST(_request, { params }) {
   const session = await getServerSession(authOptions);
-  if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
   await ConnectDb();
   await recoverStaleAnalyses();
-  const user = await User.findOne({ email: session.user.email }).select("_id");
   const { id: jobId } = await params;
-  const analysis = await Analysis.findOne({ jobId, user: user?._id });
+
+  let analysis;
+  if (session?.user?.email) {
+    const user = await User.findOne({ email: session.user.email }).select("_id");
+    analysis = await Analysis.findOne({ jobId, user: user?._id });
+  } else {
+    analysis = await Analysis.findOne({ jobId, user: null });
+  }
   if (!analysis) return NextResponse.json({ error: "Analysis not found" }, { status: 404 });
   if (analysis.status === "Completed") return NextResponse.json(analysis);
   if (analysis.status === "Failed") return NextResponse.json({ error: analysis.error || "Analysis failed." }, { status: 500 });

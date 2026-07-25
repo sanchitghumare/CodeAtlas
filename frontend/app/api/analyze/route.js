@@ -7,6 +7,19 @@ import Analysis from "@/models/analysis";
 import { randomUUID } from "crypto";
 import { recoverStaleAnalyses } from "@/lib/analysis-lifecycle";
 
+function normalizeGithubUrl(input) {
+    const trimmed = input.trim().replace(/\.git$/, "").replace(/\/$/, "");
+    const match = trimmed.match(
+        /^(?:https?:\/\/)?(?:www\.)?github\.com\/([^/\s]+)\/([^/\s]+)$/
+    ) || trimmed.match(/^([^/\s]+)\/([^/\s]+)$/);
+
+    if (!match) return null;
+    const [, owner, repo] = match;
+    return `https://github.com/${owner}/${repo}`;
+}
+function isLikelyPublicGithubUrl(url) {
+    return /^https:\/\/github\.com\/[^/]+\/[^/]+$/.test(url);
+}
 export async function GET() {
     try {
         const session = await getServerSession(authOptions);
@@ -56,25 +69,20 @@ export async function POST(req) {
     let analysis;
     try {
         const session = await getServerSession(authOptions);
-
-        if (!session?.user?.email) {
-            return NextResponse.json(
-                { error: "Unauthorized" },
-                { status: 401 }
-            );
-        }
         await ConnectDb();
         await recoverStaleAnalyses();
-        const user = await User.findOne({
-            email: session.user.email,
-        });
 
-        if (!user) {
-            return NextResponse.json(
-                { error: "User not found" },
-                { status: 404 }
-            );
+        let user = null;
+        if (session?.user?.email) {
+            user = await User.findOne({ email: session.user.email });
+            if (!user) {
+                return NextResponse.json(
+                    { error: "User not found" },
+                    { status: 404 }
+                );
+            }
         }
+
         const { repo_url } = await req.json();
 
         if (!repo_url) {

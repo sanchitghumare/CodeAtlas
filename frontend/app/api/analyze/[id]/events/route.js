@@ -11,14 +11,17 @@ export const runtime = "nodejs";
 export async function GET(_request, { params }) {
   console.log("SSE proxy request received");
   const session = await getServerSession(authOptions);
-  if (!session?.user?.email) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-  await ConnectDb();
+    await ConnectDb();
   await recoverStaleAnalyses();
-  const user = await User.findOne({ email: session.user.email }).select("_id");
   const { id: jobId } = await params;
-  console.log(`Opening upstream SSE connection for job ${jobId}`);
-  const analysis = await Analysis.findOne({ jobId, user: user?._id, status: "In Progress" });
+  
+  let analysis;
+  if (session?.user?.email) {
+    const user = await User.findOne({ email: session.user.email }).select("_id");
+    analysis = await Analysis.findOne({ jobId, user: user?._id, status: "In Progress" });
+  } else {
+    analysis = await Analysis.findOne({ jobId, user: null, status: "In Progress" });
+  }
   if (!analysis) return NextResponse.json({ error: "Analysis not found" }, { status: 404 });
 
   const upstream = await fetch(`${process.env.NEXT_PUBLIC_FASTAPI_URL}/review/analyze/${jobId}/events`, {

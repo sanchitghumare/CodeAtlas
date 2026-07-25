@@ -11,16 +11,15 @@ export async function GET(req, { params }) {
   await recoverStaleAnalyses();
 
   const session = await getServerSession(authOptions);
-
-  if (!session?.user?.email) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
-  const user = await User.findOne({ email: session.user.email });
-
   const { id } = await params;
 
-  const analysis = await Analysis.findOne({ _id: id, user: user._id });
+  let analysis;
+  if (session?.user?.email) {
+    const user = await User.findOne({ email: session.user.email });
+    analysis = await Analysis.findOne({ _id: id, user: user?._id });
+  } else {
+    analysis = await Analysis.findOne({ _id: id, user: null });
+  }
 
   if (!analysis) {
     return NextResponse.json(
