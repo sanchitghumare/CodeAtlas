@@ -69,7 +69,7 @@ def clone_repo(repo_url: str, job_id: str,token: str | None) -> dict:
     TEMP_DIR.mkdir(parents=True, exist_ok=True)
     print(f"Cloning {repo_name}...", flush=True)
     try:
-        _run_git(["clone", "--depth", "1", repo_url, str(destination)], CLONE_TIMEOUT)
+        _run_git(["clone", "--depth", "1", authenticated_url, str(destination)], CLONE_TIMEOUT)
     except CloneError:
         cleanup_repo(destination)
         raise

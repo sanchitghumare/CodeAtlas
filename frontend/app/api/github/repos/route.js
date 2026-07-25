@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
-
+import { getInstallationToken } from "@/lib/githubApp";
 import ConnectDb from "@/lib/mongodb";
 import User from "@/models/user";
 
@@ -22,18 +22,18 @@ export async function GET() {
       email: session.user.email,
     });
 
-    if (!user?.githubAccessToken) {
+    if (!user?.githubInstallationId) {
       return NextResponse.json(
-        { error: "GitHub token not found" },
+        { error: "GitHub App not installed" },
         { status: 400 }
       );
     }
-
+    const token = await getInstallationToken(user.githubInstallationId);
     const githubResponse = await fetch(
-      "https://api.github.com/user/repos?sort=updated&per_page=100",
+      "https://api.github.com/installation/repositories?per_page=100",
       {
         headers: {
-          Authorization: `Bearer ${user.githubAccessToken}`,
+          Authorization: `Bearer ${token}`,
           Accept: "application/vnd.github+json",
         },
         cache: "no-store",

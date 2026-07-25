@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+GITHUB_APP_ID = os.getenv("GITHUB_APP_ID")
+GITHUB_APP_PRIVATE_KEY = os.getenv("GITHUB_APP_PRIVATE_KEY","").replace("\\n", "\n")
 
 def _seconds(name: str, default: int, minimum: int = 1) -> int:
     try:

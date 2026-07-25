@@ -27,15 +27,6 @@ const UserSchema = new Schema(
       type: String,
       trim: true,
     },
-    githubId: {
-      type: String,
-      unique: true,
-      sparse: true,
-    },
-
-    githubAccessToken: {
-      type: String,
-    },
   },
   {
     timestamps: true,

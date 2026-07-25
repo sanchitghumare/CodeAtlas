@@ -1,6 +1,5 @@
 import NextAuth from "next-auth";
 import GithubProvider from "next-auth/providers/github";
-// import EmailProvider from "next-auth/providers/email";
 import User from "@/models/user";
 import ConnectDb from "@/lib/mongodb";
 
@@ -11,7 +10,7 @@ export const authOptions = {
       clientSecret: process.env.GITHUB_SECRET,
       authorization: {
         params: {
-          scope: "read:user user:email repo",
+          scope: "read:user user:email",
         }
       },
     }),
@@ -32,7 +31,6 @@ export const authOptions = {
               username: user.email.split("@")[0],
               profilepic: user.image || "",
               githubId: account.providerAccountId,
-              githubAccessToken: account.access_token,
             },
             {
               upsert: true,

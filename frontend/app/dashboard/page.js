@@ -13,6 +13,7 @@ import RepoCard from "@/components/ui/RepoCard";
 import StatusBadge from "@/components/ui/StatusBadge";
 import { useRouter } from "next/navigation";
 import RepositoryInput from "@/components/ui/RepositoryInput";
+import InstallGitHubAppButton from "@/components/ui/InstallGitHubAppButton";
 const scoreClass = (score) =>
   score >= 80
     ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"
@@ -163,6 +164,7 @@ border-b border-zinc-900">
                 {user ? user.slice(0, 2).toUpperCase() : "?"}
               </div>
             )}
+            <InstallGitHubAppButton />
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
               className="rounded-lg bg-zinc-900 px-3 py-2 text-xs font-medium text-white transition-colors hover:bg-red-400"
