@@ -47,9 +47,11 @@ export async function GET() {
       );
     }
 
-    const repos = await githubResponse.json();
-
-    return NextResponse.json(repos);
+    const { repositories } = await githubResponse.json();
+    const sorted = (repositories ?? []).sort(
+      (a, b) => new Date(b.updated_at) - new Date(a.updated_at)
+    );
+    return NextResponse.json(sorted);
   } catch (err) {
     console.error(err);
 
