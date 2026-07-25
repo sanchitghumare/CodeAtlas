@@ -12,6 +12,7 @@ from app.services.config import ANALYSIS_TIMEOUT, JOB_RETENTION_TIMEOUT
 from app.services.llm import LLMInvocationError, LLMTimeoutError
 from app.services.schemas.review import RepositoryRequest
 from app.tools.github import CloneError, CloneTimeoutError, cleanup_repo, clone_repo
+from app.tools.github_app import get_installation_token
 from app.tools.reader import read_readme
 from app.tools.scanner import scan_repository
 from app.tools.tree import build_directory_tree
@@ -19,7 +20,6 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, HttpUrl
-from app.tools.github_app import get_installation_token
 
 router = APIRouter(prefix="/review", tags=["Review"])
 jobs: dict[str, dict] = {}
@@ -120,7 +120,7 @@ def _run_analysis(repo_url: str, job_id: str) -> None:
         result = state
         job["stage"] = "analysis"
         print(f"Graph started for job {job_id}", flush=True)
-        for update in graph.stream(state, stream_mode="values"):
+        for update in graph.stream(state, stream_mode="values",config={"max_concurrency:2"}):
             _raise_if_cancelled(job)
             result = update
             if update.get("summary") and not job.get("summary_sent"):

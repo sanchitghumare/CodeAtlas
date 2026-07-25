@@ -1,4 +1,5 @@
 import os
+import time
 from typing import Any
 
 from app.services.config import LLM_TIMEOUT
@@ -21,6 +22,10 @@ class LLMInvocationError(RuntimeError):
     """A user-safe failure raised when a model request cannot be completed."""
 
 
+class LLMRateLimitError(RuntimeError):
+    """A user-safe failure raised when the model provider's rate limit is exceeded."""
+
+
 llm = ChatGroq(
     api_key=SecretStr(groq_api_key),
     model=os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile"),
@@ -30,12 +35,44 @@ llm = ChatGroq(
     max_retries=0,
 )
 
+RATE_LIMIT_RETRIES = 2
+RATE_LIMIT_BACKOFF_SECONDS = 5
+
+
+def _is_rate_limit(exc: Exception) -> bool:
+    status_code = getattr(exc, "status_code", None)
+    if status_code == 429:
+        return True
+    text = f"{type(exc).__name__} {exc}".lower()
+    return "rate limit" in text or "429" in text
+
 
 def invoke_llm(model: Any, prompt: Any):
-    """Invoke any shared/structured model with consistent timeout reporting."""
-    try:
-        return model.invoke(prompt)
-    except Exception as exc:  # noqa: BLE001
-        if "timeout" in type(exc).__name__.lower() or "timed out" in str(exc).lower():
-            raise LLMTimeoutError("AI analysis timed out. Please try again.") from exc
-        raise LLMInvocationError("AI analysis failed. Please try again.") from exc
+    """Invoke any shared/structured model with consistent timeout reporting.
+
+    Rate-limit errors (429) get a short retry with backoff, since they're
+    usually transient (the provider's per-minute window clearing) rather
+    than a real failure worth aborting the whole job over.
+    """
+    last_exc: Exception | None = None
+    for attempt in range(RATE_LIMIT_RETRIES + 1):
+        try:
+            return model.invoke(prompt)
+        except Exception as exc:  
+            last_exc = exc
+            print(f"LLM invocation failed (attempt {attempt + 1}): {type(exc).__name__}: {exc}", flush=True)
+            if "timeout" in type(exc).__name__.lower() or "timed out" in str(exc).lower():
+                raise LLMTimeoutError("AI analysis timed out. Please try again.") from exc
+            if _is_rate_limit(exc) and attempt < RATE_LIMIT_RETRIES:
+                wait = RATE_LIMIT_BACKOFF_SECONDS * (attempt + 1)
+                print(f"Rate limited, retrying in {wait}s...", flush=True)
+                time.sleep(wait)
+                continue
+            if _is_rate_limit(exc):
+                raise LLMRateLimitError(
+                    "AI provider rate limit reached. Please try again in a minute."
+                ) from exc
+            raise LLMInvocationError("AI analysis failed. Please try again.") from exc
+
+    # Unreachable, but keeps type checkers happy.
+    raise LLMInvocationError("AI analysis failed. Please try again.") from last_exc

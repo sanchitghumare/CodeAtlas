@@ -146,7 +146,20 @@ Analyze any GitHub repository with AI-powered code reviews.
 ![Landing Page](./Screenshots/Home.png)
 
 ---
+### Dashboard
 
+Browse your GitHub repositories and launch an AI-powered analysis with a single click.
+
+![Dashboard Page](./Screenshots/dashboard.png)
+
+---
+### ⚡ Live Analysis
+
+Follow the review pipeline in real time as CodeAtlas clones the repository, analyzes the codebase, reviews files, and generates the final report.
+
+![Live Analysis](./Screenshots/loading.png)
+
+---
 ### Analysis Report
 
 Executive summary with health score and AI insights.
@@ -164,6 +177,7 @@ Cross-file architecture analysis.
 Individual file review.
 
 ![File Review](./Screenshots/files.png)
+![Per File Revew](./Screenshots/per-file.png)
 
 AI Chat assistant.
 
@@ -180,7 +194,7 @@ NEXTAUTH_SECRET=
 
 MONGODB_URI=
 
-# GitHub OAuth — identity only, no repo access
+# GitHub OAuth
 GITHUB_ID=
 GITHUB_SECRET=
 
@@ -195,8 +209,8 @@ NEXT_PUBLIC_FASTAPI_URL=
 
 **Backend** (`backend/.env`)
 ```env
-GROQ_API_KEY=
-GROQ_MODEL=
+LLM_API_KEY=
+LLM_MODEL=
 
 INTERNAL_API_TOKEN=
 
