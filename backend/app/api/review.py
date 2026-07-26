@@ -120,7 +120,7 @@ def _run_analysis(repo_url: str, job_id: str) -> None:
         result = state
         job["stage"] = "analysis"
         print(f"Graph started for job {job_id}", flush=True)
-        for update in graph.stream(state, stream_mode="values",config={"max_concurrency:2"}):
+        for update in graph.stream(state, stream_mode="values"):
             _raise_if_cancelled(job)
             result = update
             if update.get("summary") and not job.get("summary_sent"):
