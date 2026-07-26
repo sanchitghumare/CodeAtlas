@@ -15,6 +15,9 @@ const geistMono = Geist_Mono({
 export const metadata = {
   title: "CodeAtlas",
   description: "AI Code Review",
+   icons: {
+    icon: "/icon.png",
+  },
 };
 
 export default function RootLayout({ children }) {

@@ -67,13 +67,26 @@ export async function GET() {
 
 export async function POST(req) {
     let analysis;
+    let stage = "start";
     try {
-        const session = await getServerSession(authOptions);
+        stage = "getServerSession";
+        let session = null;
+        try {
+            session = await getServerSession(authOptions);
+        } catch (sessionErr) {
+            console.error("[analyze POST] getServerSession failed, continuing as guest:", sessionErr);
+            session = null;
+        }
+ 
+        stage = "ConnectDb";
         await ConnectDb();
+ 
+        stage = "recoverStaleAnalyses";
         await recoverStaleAnalyses();
-
+ 
         let user = null;
         if (session?.user?.email) {
+            stage = "User.findOne";
             user = await User.findOne({ email: session.user.email });
             if (!user) {
                 return NextResponse.json(
@@ -82,25 +95,44 @@ export async function POST(req) {
                 );
             }
         }
-
+ 
+        stage = "req.json";
         const { repo_url } = await req.json();
-
+ 
         if (!repo_url) {
             return NextResponse.json(
                 { error: "Repository URL is required" },
                 { status: 400 }
             );
         }
-
+ 
+        stage = "normalizeGithubUrl";
+        const normalizedUrl = normalizeGithubUrl(repo_url);
+        if (!normalizedUrl) {
+            return NextResponse.json(
+                { error: "Enter a valid GitHub repository, e.g. github.com/owner/repo" },
+                { status: 400 }
+            );
+        }
+ 
+        if (!user && !isLikelyPublicGithubUrl(normalizedUrl)) {
+            return NextResponse.json(
+                { error: "Sign in to analyze private repositories." },
+                { status: 401 }
+            );
+        }
+ 
+        stage = "Analysis.create";
         const jobId = randomUUID();
         analysis = await Analysis.create({
-            user: user._id,
-            repository: repo_url.split("/").pop(),
-            repoUrl: repo_url,
+            user: user?._id ?? null,
+            repository: normalizedUrl.split("/").pop(),
+            repoUrl: normalizedUrl,
             jobId,
             status: "In Progress",
         });
-
+ 
+        stage = "fetch backend"
         const fastApiResponse = await fetch(
             `${process.env.NEXT_PUBLIC_FASTAPI_URL}/review/analyze/start`,
             {
@@ -129,9 +161,9 @@ export async function POST(req) {
             jobId,
         });
     } catch (err) {
-        console.error(err);
+        console.error(`[analyze POST] failed at stage "${stage}":`, err);
         if (analysis?._id) {
-            await Analysis.findByIdAndUpdate(analysis._id, { status: "Failed", error: "Unable to start the analysis service.", completedAt: new Date() });
+             await Analysis.findByIdAndUpdate(analysis._id, { status: "Failed", error: "Unable to start the analysis service.", completedAt: new Date() });
         }
 
         return NextResponse.json(

@@ -1,4 +1,5 @@
 import os
+import re
 import time
 from typing import Any
 
@@ -35,8 +36,10 @@ llm = ChatGroq(
     max_retries=0,
 )
 
-RATE_LIMIT_RETRIES = 2
-RATE_LIMIT_BACKOFF_SECONDS = 5
+RATE_LIMIT_RETRIES = 4
+RATE_LIMIT_DEFAULT_WAIT = 6.0
+RATE_LIMIT_MAX_WAIT = 25.0
+_RETRY_AFTER_RE = re.compile(r"try again in ([\d.]+)s", re.IGNORECASE)
 
 
 def _is_rate_limit(exc: Exception) -> bool:
@@ -46,7 +49,14 @@ def _is_rate_limit(exc: Exception) -> bool:
     text = f"{type(exc).__name__} {exc}".lower()
     return "rate limit" in text or "429" in text
 
-
+def _rate_limit_wait_seconds(exc: Exception) -> float:
+    """Prefer Groq's own suggested wait time (it's exact, from a live token
+    counter) over a guessed backoff. Falls back to a fixed default if the
+    message shape ever changes."""
+    match = _RETRY_AFTER_RE.search(str(exc))
+    if match:
+        return min(float(match.group(1)) + 0.5, RATE_LIMIT_MAX_WAIT)  # small buffer
+    return RATE_LIMIT_DEFAULT_WAIT
 def invoke_llm(model: Any, prompt: Any):
     """Invoke any shared/structured model with consistent timeout reporting.
 
@@ -64,7 +74,7 @@ def invoke_llm(model: Any, prompt: Any):
             if "timeout" in type(exc).__name__.lower() or "timed out" in str(exc).lower():
                 raise LLMTimeoutError("AI analysis timed out. Please try again.") from exc
             if _is_rate_limit(exc) and attempt < RATE_LIMIT_RETRIES:
-                wait = RATE_LIMIT_BACKOFF_SECONDS * (attempt + 1)
+                wait = _rate_limit_wait_seconds(exc)
                 print(f"Rate limited, retrying in {wait}s...", flush=True)
                 time.sleep(wait)
                 continue
