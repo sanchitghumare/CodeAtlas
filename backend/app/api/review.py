@@ -147,7 +147,8 @@ def _run_analysis(repo_url: str, job_id: str) -> None:
         print(f"Background task finished for job {job_id}", flush=True)
     except Exception as exc:  # noqa: BLE001
         error = _public_error(exc)
-        print(f"Background task failed for job {job_id}: {exc}", flush=True)
+        cause = exc.__cause__ or exc
+        print(f"Background task failed for job {job_id}: {type(cause).__name__}: {cause}", flush=True)
         _finish_job(job_id, "failed", error)
     finally:
         cleanup_repo(repo_path)

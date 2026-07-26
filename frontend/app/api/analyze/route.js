@@ -142,9 +142,9 @@ export async function POST(req) {
                     "X-Internal-Token": process.env.INTERNAL_API_TOKEN,
                 },
                 body: JSON.stringify({
-                    repo_url,
+                    repo_url: normalizedUrl,
                     job_id: jobId,
-                    installation_id: user.githubInstallationId,
+                    installation_id: user?.githubInstallationId,
                 }),
             }
         );

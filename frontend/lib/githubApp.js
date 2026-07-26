@@ -2,9 +2,13 @@ import jwt from "jsonwebtoken";
 
 function appJwt() {
   const now = Math.floor(Date.now() / 1000);
+  const privateKey = (process.env.GITHUB_APP_PRIVATE_KEY || "").replace(/\\n/g, "\n");
+  if (!privateKey) {
+    throw new Error("GITHUB_APP_PRIVATE_KEY is not set");
+  }
   return jwt.sign(
     { iat: now - 60, exp: now + 570, iss: process.env.GITHUB_APP_ID },
-    process.env.GITHUB_APP_PRIVATE_KEY,
+    privateKey,
     { algorithm: "RS256" }
   );
 }
