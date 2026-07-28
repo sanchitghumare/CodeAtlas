@@ -2,7 +2,7 @@ from app.core.auth import verify_internal_token
 from app.core.limiter import limiter
 from app.graph.context import clip, compact_json, compact_reviews
 from app.services.llm import llm
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
@@ -17,10 +17,10 @@ class ChatRequest(BaseModel):
 
 @router.post("/chat")
 @limiter.limit("10/minute")
-async def chat(request: ChatRequest, _: None = Depends(verify_internal_token)):
-    analysis = request.analysis
-    history = request.history
-    question = request.question
+async def chat(request: Request, body: ChatRequest, _: None = Depends(verify_internal_token)):
+    analysis = body.analysis
+    history = body.history
+    question = body.question
     recent_history = [
         {"role": item.get("role"), "content": clip(item.get("content"), 700)}
         for item in history[-6:]
